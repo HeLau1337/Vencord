@@ -14,3 +14,4 @@ jobs:
               with:
                   base: main
                   head: main
+                  pr_title: Sync main branch with fork

@@ -14,3 +14,4 @@ jobs:
               with:
                   base: messagelogger-remove-entire-chat-history
                   head: main
+                  pr_title: Sync MessageLogger branch with fork
