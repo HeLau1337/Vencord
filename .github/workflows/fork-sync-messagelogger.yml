@@ -1,0 +1,16 @@
+name: Sync MessageLogger branch with fork
+
+on:
+    schedule:
+        - cron: "10 0 * * *" # Runs at 00:10
+    workflow_dispatch: # on button click
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: tgymnich/fork-sync@v1.8
+              with:
+                  base: messagelogger-remove-entire-chat-history
+                  head: main
