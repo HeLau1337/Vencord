@@ -22,7 +22,6 @@ import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatc
 import { Settings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { DeleteIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
@@ -48,6 +47,7 @@ function addDeleteStyle() {
 const REMOVE_HISTORY_ID = "ml-remove-history";
 const REMOVE_ENTIRE_HISTORY_ID = "ml-remove-entire-history";
 const TOGGLE_DELETE_STYLE_ID = "ml-toggle-style";
+
 const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) => () => {
     const { message } = props;
     const { deleted, editHistory, id, channel_id } = message;
@@ -70,25 +70,44 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) =
         ));
     }
 
+    function removeHistoryOfSingleMessage() {
+        if (deleted) {
+            FluxDispatcher.dispatch({
+                type: "MESSAGE_DELETE",
+                channelId: channel_id,
+                id: id,
+                mlDeleted: true
+            });
+        } else {
+            message.editHistory = [];
+        }
+    }
+
+    function removeHistoryOfAllMessages() {
+        const allMessages: Array<Message & { deleted: boolean; editHistory: any; }> = MessageStore.getMessages(message.channel_id)._array;
+        const deletedMessageIds: string[] = allMessages
+            .filter(message => message.deleted)
+            .map(message => message.id);
+        if (deletedMessageIds.length > 0) {
+            FluxDispatcher.dispatch({
+                type: "MESSAGE_DELETE_BULK",
+                channelId: channel_id,
+                ids: deletedMessageIds,
+                mlDeleted: true
+            });
+        }
+        allMessages.forEach(msg => {
+            msg.editHistory = [];
+        });
+    }
+
     children.push((
         <Menu.MenuItem
             id={REMOVE_HISTORY_ID}
             key={REMOVE_HISTORY_ID}
             label="Remove Message History"
             color="danger"
-            icon={DeleteIcon}
-            action={() => {
-                if (deleted) {
-                    FluxDispatcher.dispatch({
-                        type: "MESSAGE_DELETE",
-                        channelId: channel_id,
-                        id,
-                        mlDeleted: true
-                    });
-                } else {
-                    message.editHistory = [];
-                }
-            }}
+            action={() => removeHistoryOfSingleMessage()}
         />
     ));
 
@@ -96,26 +115,9 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) =
         <Menu.MenuItem
             id={REMOVE_ENTIRE_HISTORY_ID}
             key={REMOVE_ENTIRE_HISTORY_ID}
-            label="Remove History of all Messages"
+            label="Remove History Of All Messages"
             color="danger"
-            icon={DeleteIcon}
-            action={() => {
-                const allMessages: Array<Message & { deleted: boolean; editHistory: any; }> = MessageStore.getMessages(message.channel_id)._array;
-                const deletedMessageIds: string[] = allMessages
-                    .filter(message => message.deleted)
-                    .map(message => message.id);
-                if (deletedMessageIds.length > 0) {
-                    FluxDispatcher.dispatch({
-                        type: "MESSAGE_DELETE_BULK",
-                        channelId: channel_id,
-                        mlDeleted: true,
-                        ids: deletedMessageIds
-                    });
-                }
-                allMessages.forEach(msg => {
-                    msg.editHistory = [];
-                });
-            }}
+            action={() => removeHistoryOfAllMessages()}
         />
     ));
 };
@@ -196,7 +198,7 @@ export default definePlugin({
         },
     },
 
-    handleDelete(cache: any, data: { ids: string[], id: string; mlDeleted?: boolean; channelId: string; }, isBulk: boolean) {
+    handleDelete(cache: any, data: { ids: string[], id: string; mlDeleted?: boolean; }, isBulk: boolean) {
         try {
             if (cache == null || (!isBulk && !cache.has(data.id))) return cache;
 
