@@ -1,4 +1,4 @@
-name: Sync MessageLogger branch with fork
+name: Fork Sync MessageLogger branch with parent repository
 
 on:
     schedule:
@@ -14,4 +14,4 @@ jobs:
               with:
                   base: messagelogger-remove-entire-chat-history
                   head: main
-                  pr_title: Sync MessageLogger branch with fork
+                  pr_title: Fork Sync MessageLogger branch with parent repository

@@ -1,4 +1,4 @@
-name: Sync TextReplace branch with fork
+name: Fork Sync TextReplace branch with parent repository
 
 on:
     schedule:
@@ -14,4 +14,4 @@ jobs:
               with:
                   base: textreplace-rules-in-settings-json
                   head: main
-                  pr_title: Sync TextReplace branch with fork
+                  pr_title: Fork Sync TextReplace branch with parent repository

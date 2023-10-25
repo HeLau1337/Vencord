@@ -1,4 +1,4 @@
-name: Sync develop branch with fork
+name: Fork Sync develop branch with parent repository
 
 on:
     schedule:
@@ -14,4 +14,4 @@ jobs:
               with:
                   base: develop
                   head: main
-                  pr_title: Sync develop branch with fork
+                  pr_title: Fork Sync develop branch with parent repository
