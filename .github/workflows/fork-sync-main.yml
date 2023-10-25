@@ -15,4 +15,3 @@ jobs:
                   base: main
                   head: main
                   pr_title: Fork Sync main branch with parent repository
-                  merge_method: rebase
