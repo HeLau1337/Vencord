@@ -12,6 +12,6 @@ jobs:
         steps:
             - uses: tgymnich/fork-sync@v1.8
               with:
-                  base: messagelogger-remove-entire-chat-history
+                  base: messagelogger
                   head: main
                   pr_title: Fork Sync MessageLogger branch with parent repository

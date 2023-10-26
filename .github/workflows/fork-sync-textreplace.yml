@@ -12,6 +12,6 @@ jobs:
         steps:
             - uses: tgymnich/fork-sync@v1.8
               with:
-                  base: textreplace-rules-in-settings-json
+                  base: textreplace
                   head: main
                   pr_title: Fork Sync TextReplace branch with parent repository
