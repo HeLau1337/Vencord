@@ -37,13 +37,31 @@ git clone https://github.com/HeLau1337/Vencord
 cd Vencord
 ```
 
-Switch to the develop branch:
+Now you need to decide which of my available branches you want use. Current choices are:
+
+-   the "**textreplace**" branch which only applies my changes to the TextReplace plugin
+
+    -   All TextReplace rules will now be stored in Vencord's settings.json file. This allows easier import/export of many rules at once. You can find the settings.json file by going into your Discord settings (when Vencord is already installed), in the Vencord section click on the Vencord category, then click on the "Open Settings Folder" button in the Quick Actions box.
+    -   If you use Vencord's existing Cloud Sync feature, your TextReplace rules will now be synced too!
+    -   If you also use the [Vendetta](https://github.com/vendetta-mod/Vendetta#vendetta) mod for Discord on mobile phones, feel free to check out [my forked TextReplace plugin for Vendetta](https://github.com/HeLau1337/vendetta-text-replace/blob/releases/README.md#how-to-install). It allows you to easily import the TextReplace rules from the Vencord Cloud with a simple tap of a button!
+
+-   the "**messagelogger**" branch which only applies my changes to the MessageLogger plugin
+
+    -   This features a new context menu option which allows you to clear the entire message history that was logged by MessageLogger in the current channel. The only tiny flaw of this is that you need to move your mouse over edited messages (after you selected the new context menu option) so they will be re-rendered without the edit history. Deleted messages that have been logged by MessageLogger will be all automatically completely deleted immediately.
+
+-   the "**develop**" branch which bundles all of my modifications to the original Vencord project
+
+    -   currently this only affects the changes to the two plugins mentioned above
+
+-   (the "main" branch which is currently matching the state of the original Vencord repository's main branch - so there are no modifications included)
+
+Switch to the branch of your choice using `git checkout <branch-name>`. For example:
 
 ```
 git checkout develop
 ```
 
-Install dependencies:
+Now install the dependencies:
 
 ```shell
 pnpm install --frozen-lockfile
