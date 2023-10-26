@@ -10,12 +10,8 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Fork Sync
-              run: |
-                  output=$(npx tgymnich/fork-sync@v1.8 base=textreplace head=main pr_title="Fork Sync TextReplace branch with parent repository" 2>&1)
-                  echo "$output"
-                  if [[ "$output" == *"No commits between"* ]]; then
-                    echo "Pull request error detected, but workflow continues."
-                  else
-                    echo "No pull request error detected."
-                  fi
+            - uses: tgymnich/fork-sync@v1.8
+              with:
+                  base: textreplace
+                  head: main
+                  pr_title: Fork Sync TextReplace branch with parent repository
