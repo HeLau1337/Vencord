@@ -2,7 +2,7 @@ name: Fork Sync TextReplace branch with parent repository
 
 on:
     schedule:
-        - cron: "15 0 * * *" # Runs at 00:15
+        - cron: "15 * * * *" # runs every hour
     workflow_dispatch: # on button click
 
 jobs:

@@ -2,7 +2,7 @@ name: Fork Sync MessageLogger branch with parent repository
 
 on:
     schedule:
-        - cron: "10 0 * * *" # Runs at 00:10
+        - cron: "10 * * * *" # runs every hour
     workflow_dispatch: # on button click
 
 jobs:

@@ -2,7 +2,7 @@ name: Fork Sync main branch with parent repository
 
 on:
     schedule:
-        - cron: "0 0 * * *" # Runs at 00:00
+        - cron: "0 * * * *" # runs every hour
     workflow_dispatch: # on button click
 
 jobs:
