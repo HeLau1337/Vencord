@@ -13,8 +13,8 @@ jobs:
             - name: Check for changes
               id: changes
               run: |
-                  chmod +x fork-sync-check-for-changes.sh # Make the script executable
-                  ./fork-sync-check-for-changes.sh develop main # Pass branch names as parameters
+                  chmod +x .github/workflows/fork-sync-check-for-changes.sh # Make the script executable
+                  ./.github/workflows/fork-sync-check-for-changes.sh develop main # Pass branch names as parameters
 
     sync:
         needs: check-for-changes
