@@ -1,0 +1,63 @@
+name: Sync fork branches with parent repository
+
+on:
+    schedule:
+        - cron: "0 */3 * * *" # runs every hour
+    workflow_dispatch: # on button click
+
+jobs:
+    check-for-changes:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Check for changes in branch
+              id: check-changes
+              run: |
+                  function check_changes() {
+                      local fork_branch="$1"
+                      local upstream_branch="$2"
+                      git fetch origin "$fork_branch:origin_$fork_branch"
+                      git fetch upstream "$upstream_branch:upstream_$upstream_branch"
+                      CHANGES=$(git log --oneline "origin_$fork_branch..upstream_$upstream_branch")
+                      if [ -n "$CHANGES" ]; then
+                          echo "::set-output name=$fork_branch-changes::true"
+                      else
+                          echo "::set-output name=$fork_branch-changes::false"
+                      fi
+                  }
+                  check_changes "textreplace" "main"
+                  check_changes "messagelogger" "main"
+                  check_changes "develop" "main"
+                  check_changes "main" "main"
+
+    sync:
+        needs: check-for-changes
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Sync TextReplace branch with parent repository
+              if: needs.check-for-changes.outputs.textreplace-changes == 'true'
+              uses: tgymnich/fork-sync@v1.8
+              with:
+                  base: textreplace
+                  head: main
+                  pr_title: Sync TextReplace branch with parent repository
+            - name: Sync MessageLogger branch with parent repository
+              if: needs.check-for-changes.outputs.messagelogger-changes == 'true'
+              uses: tgymnich/fork-sync@v1.8
+              with:
+                  base: messagelogger
+                  head: main
+                  pr_title: Sync MessageLogger branch with parent repository
+            - name: Sync develop branch with parent repository
+              if: needs.check-for-changes.outputs.develop-changes == 'true'
+              uses: tgymnich/fork-sync@v1.8
+              with:
+                  base: develop
+                  head: main
+                  pr_title: Sync develop branch with parent repository
+            - name: Sync main branch with parent repository
+              if: needs.check-for-changes.outputs.main-changes == 'true'
+              run: gh repo sync HeLau1337/Vencord -b main
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
