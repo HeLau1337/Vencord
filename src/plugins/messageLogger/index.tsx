@@ -125,7 +125,7 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) =
 export default definePlugin({
     name: "MessageLogger",
     description: "Temporarily logs deleted and edited messages.",
-    authors: [Devs.rushii, Devs.Ven, Devs.AutumnVN],
+    authors: [Devs.rushii, Devs.Ven, Devs.AutumnVN, { name: "hendrik3812", id: 286208399786377216n }],
 
     start() {
         addDeleteStyle();
