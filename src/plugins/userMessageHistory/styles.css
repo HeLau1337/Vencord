@@ -1,0 +1,12 @@
+
+.vc-umh-search-info-sticky {
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-overlay-app-frame,var(--background-tertiary));
+    z-index: 999;
+}
+
+.vc-umh-message-card {
+    padding: .5rem;
+    margin: .5rem;
+}
