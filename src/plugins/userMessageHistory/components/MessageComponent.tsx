@@ -21,8 +21,9 @@ import "../styles.css";
 import { openUserProfile } from "@utils/discord";
 import { LazyComponent } from "@utils/react";
 import { filters, findBulk } from "@webpack";
-import { Card, Text } from "@webpack/common";
+import { Card, SnowflakeUtils, Text, Timestamp } from "@webpack/common";
 import { Message } from "discord-types/general";
+import moment from "moment";
 
 import { cl } from "../utils";
 
@@ -53,7 +54,7 @@ export default LazyComponent(() => {
 
         return (
             <Card className={cl("message-card")}>
-                <Text variant="text-sm/normal">{message.timestamp.toLocaleString()}</Text>
+                <Timestamp timestamp={moment(SnowflakeUtils.extractTimestamp(message.id))} className={cl("timestamp")} />
                 <Text>{message.content}</Text>
             </Card>
         );

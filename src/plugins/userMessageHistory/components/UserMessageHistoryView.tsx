@@ -20,7 +20,7 @@ import "../styles.css";
 
 import { LazyComponent, useAwaiter, useForceUpdater } from "@utils/react";
 import { find, findByPropsLazy } from "@webpack";
-import { Forms, React, RestAPI, SelectedGuildStore, UserStore } from "@webpack/common";
+import { ChannelStore, Forms, React, RestAPI, SelectedGuildStore, Text, UserStore } from "@webpack/common";
 import { Message, User } from "discord-types/general";
 
 import { DiscordSearchQuery, SearchResults } from "../interfaces";
@@ -90,12 +90,16 @@ function MessageList({ refetch, messages }: { refetch(): void; messages: Message
 
     return (
         <div className={cl("message-component-wrapper")}>
-            {messages.map(msg =>
-                <MessageComponent
-                    key={msg.at(0)!.id}
-                    message={msg.at(0)!}
-                    refetch={refetch}
-                />
+            {messages.map((msg, index) =>
+                <>
+                    {msg.at(0)!.channel_id !== messages.at(index - 1)?.at(0)?.channel_id && (
+                        <Text variant="text-md/bold"># {ChannelStore.getChannel(msg.at(0)!.channel_id).name}</Text>)}
+                    < MessageComponent
+                        key={msg.at(0)!.id}
+                        message={msg.at(0)!}
+                        refetch={refetch}
+                    />
+                </>
             )}
 
             {messages.length === 0 && (

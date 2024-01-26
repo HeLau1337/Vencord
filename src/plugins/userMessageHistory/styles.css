@@ -7,6 +7,12 @@
 }
 
 .vc-umh-message-card {
-    padding: .5rem;
+    padding: .75rem;
     margin: .5rem;
+}
+
+.vc-umh-timestamp {
+    font-size: .75rem;
+    color: var(--text-muted);
+    margin: 0 !important;
 }
