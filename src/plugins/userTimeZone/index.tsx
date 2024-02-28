@@ -24,9 +24,9 @@ import { CurrentLocalTimestampComponentWrapper } from "./components/CurrentLocal
 export const utzStoreService = new UtzStoreService();
 
 export default definePlugin({
-    name: "MoreUserInfo",
+    name: "UserTimeZone",
     authors: [{ name: "hendrik3812", id: 286208399786377216n }],
-    description: "Adds some options for showing information about other users.",
+    description: "Allows you to show other user's current local timestamps (according to the time zone you set for the user).",
 
     start() {
         utzStoreService.refreshCache();
