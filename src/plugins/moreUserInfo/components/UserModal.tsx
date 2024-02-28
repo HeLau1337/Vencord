@@ -21,9 +21,9 @@ import {
     Button,
     Forms,
     React,
-    Select,
     Switch,
-    Text, Tooltip,
+    Text,
+    Tooltip,
     useRef,
     useState
 } from "@webpack/common";
@@ -32,11 +32,52 @@ import moment from "moment-timezone";
 
 import { muiStoreService } from "../index";
 import { UserTimestampConfig } from "../types";
+import { Common } from "webpack";
+import { SelectOption } from "@webpack/types";
+
 
 export function openUserModal(user: User) {
     openModal(props =>
         <UserModal modalProps={props} user={user} />
     );
+}
+
+function buildTimeZoneOption(tzName: string): SelectOption {
+    const now = Date.now();
+    const zone = moment.tz.zone(tzName);
+    const abbr = zone?.abbr(now);
+
+    let offset = zone?.utcOffset(now);
+    let gmtOffset: string | undefined = undefined;
+    if (offset) {
+        // moment.js returns "inverted" utcOffsets https://momentjs.com/timezone/docs/#/zone-object/offset/
+        // but since that's not what the normal user expects, I invert the inversion again (* -1) for generating the label
+        offset = offset * -1;
+        let sign = Math.sign(offset) === 1 ? "+" : "";
+        let offsetHours = Math.floor(offset / 60);
+        let offsetMinutes = Math.abs(offset % 60); // there are time zones with utcOffsets like 5:45
+        gmtOffset = `GMT${sign}${offsetHours}`;
+        if (offsetMinutes !== 0) gmtOffset += `:${offsetMinutes}`;
+    }
+
+    const spacer = "  |  ";
+    let label = tzName;
+    if (abbr) label += `${spacer}${abbr}`;
+    if (gmtOffset) label += `${spacer}${gmtOffset}`;
+    return {
+        label: label,
+        value: tzName
+    } as SelectOption;
+}
+
+function getTimeZoneSelectOptions(): SelectOption[] {
+    const tzNames = moment.tz.names();
+    let selectOptions: SelectOption[] = [];
+
+    tzNames.forEach(name => {
+        selectOptions.push(buildTimeZoneOption(name));
+    });
+    return selectOptions;
 }
 
 function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }) {
@@ -46,21 +87,17 @@ function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }
 
     const canSubmit = () => Object.values(errors).every(e => !e);
 
-
     const userTimestampConfig = muiStoreService.getUserTimezoneConfigCache(user.id);
     const ref = useRef<HTMLDivElement>(null);
-    const [selectedTimezone, setSelectedTimezone] = useState<string>(userTimestampConfig.timezone);
+    const [selectedTimezone, setSelectedTimezone] = useState<string>(userTimestampConfig.timeZone);
     const [showLocalTimestampsInMessages, setShowLocalTimestampsInMessages] = useState<boolean>(userTimestampConfig.showInMessages);
 
-    const tzNames = moment.tz.names();
-    const tzNamesSelection = tzNames.map(name => {
-        return { label: name, value: name };
-    });
+    const tzSelectOptions: ReadonlyArray<SelectOption> = getTimeZoneSelectOptions();
 
     async function saveAndClose() {
         const newConfig: UserTimestampConfig = {
             ...userTimestampConfig,
-            timezone: selectedTimezone,
+            timeZone: selectedTimezone,
             showInMessages: showLocalTimestampsInMessages
         };
         await muiStoreService.storeUserTimezoneConfig(newConfig);
@@ -80,18 +117,18 @@ function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }
                             <Forms.FormTitle tag="h5">
                                 Options for showing timestamps in this user's local timezone
                             </Forms.FormTitle>
-                            <Select
-                                className={Margins.bottom20}
-                                placeholder={`${user.username}'s timezone`}
-                                options={tzNamesSelection}
-                                select={v => setSelectedTimezone(v)}
-                                isSelected={v => v === selectedTimezone}
-                                serialize={v => v}
-                            ></Select>
-                            <Forms.FormText></Forms.FormText>
+                            <div className={Margins.bottom20}>
+                                <Common.SearchableSelect
+                                    placeholder={`${user.username}'s timezone`}
+                                    options={tzSelectOptions}
+                                    onChange={v => setSelectedTimezone(v)}
+                                    value={buildTimeZoneOption(selectedTimezone)}
+                                ></Common.SearchableSelect>
+                            </div>
                             <Switch
                                 value={showLocalTimestampsInMessages}
                                 onChange={v => setShowLocalTimestampsInMessages(v)}
+                                note={"This will only work if their time zone is different to yours."}
                             >Show {user.username}'s local time next to their messages</Switch>
                         </Forms.FormSection>
                     </div>

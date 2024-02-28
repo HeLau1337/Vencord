@@ -21,7 +21,7 @@ export class MuiStoreService {
 
     getUserTimezoneConfigCache(userId: string) {
         if (!this.userTimestampCache[userId])
-            return this.getDefaultUserTimezoneConfig(userId);
+            return this.getDefaultUserTimeZoneConfig(userId);
         return this.userTimestampCache[userId];
     }
 
@@ -34,7 +34,7 @@ export class MuiStoreService {
             await DataStore.update<UserTimestampStore>(this.USER_TIMESTAMP_STORE_KEY, storedConfigs => {
                 storedConfigs ??= {};
                 storedConfigs[config.userId] = {
-                    ...storedConfigs?.[config.userId] ?? this.getDefaultUserTimezoneConfig(config.userId),
+                    ...storedConfigs?.[config.userId] ?? this.getDefaultUserTimeZoneConfig(config.userId),
                     ...config
                 };
                 this.userTimestampCache = storedConfigs;
@@ -54,7 +54,7 @@ export class MuiStoreService {
             return configs;
 
         if (!configs[userId])
-            return this.getDefaultUserTimezoneConfig(userId);
+            return this.getDefaultUserTimeZoneConfig(userId);
         return configs[userId];
     }
 
@@ -67,11 +67,11 @@ export class MuiStoreService {
             });
     }
 
-    private getDefaultUserTimezoneConfig(userId: string): UserTimestampConfig {
+    private getDefaultUserTimeZoneConfig(userId: string): UserTimestampConfig {
         const { timeZone, locale } = Intl.DateTimeFormat().resolvedOptions();
         return {
             userId: userId,
-            timezone: timeZone,
+            timeZone: "Universal",
             showInMessages: false,
             locale: locale
         };

@@ -39,7 +39,7 @@ function shouldShow(message: Message): boolean {
     const config = muiStoreService.getUserTimezoneConfigCache(message.author.id);
     if (!config || !config.showInMessages)
         return false;
-    if (config.timezone === DiscordNative.timeZone)
+    if (config.timeZone === Intl.DateTimeFormat().resolvedOptions().timeZone)
         return false;
 
     return true;
@@ -60,18 +60,18 @@ export const CompactLocalTimestampChatComponentWrapper = ErrorBoundary.wrap(({ m
 function LocalTimestampChatComponent({ message }: { message: Message; }) {
     const messageTimestampUtc = new Date(message.timestamp.valueOf());
     const config = muiStoreService.getUserTimezoneConfigCache(message.author.id);
-    if (!config) return null;
+    if (!config || config.timeZone === "Universal") return null;
 
     const desiredTimeZoneDate = new Date(messageTimestampUtc.toLocaleString(
         config.locale ?? DiscordNative.locale,
-        { timeZone: config.timezone })
+        { timeZone: config.timeZone })
     );
 
     return desiredTimeZoneDate
         ? (
             <span
                 className={classes(styles.timestampInline, styles.timestamp)}
-            >• Their local time: <Timestamp timestamp={desiredTimeZoneDate} ></Timestamp></span>
+            >• Their local time:<Timestamp timestamp={desiredTimeZoneDate}></Timestamp></span>
         )
         : null;
 }

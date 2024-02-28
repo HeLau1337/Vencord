@@ -18,11 +18,6 @@ function shouldShow(userId: string): boolean {
         return false;
     if (user.id === UserStore.getCurrentUser().id)
         return false;
-    const config = muiStoreService.getUserTimezoneConfigCache(user.id);
-    if (!config || !config.showInMessages)
-        return false;
-    if (config.timezone === DiscordNative.timeZone)
-        return false;
 
     return true;
 }
@@ -36,12 +31,14 @@ export const CurrentLocalTimestampComponentWrapper = ErrorBoundary.wrap(({ userI
 function CurrentLocalTimestampComponent({ userId }: { userId: string; }) {
     const currentTimestampUtc = new Date(Date.now());
     const config = muiStoreService.getUserTimezoneConfigCache(userId);
-    if (!config) return null;
+    if (!config || config.timeZone === "Universal") return null;
 
     const desiredTimeZoneDate = new Date(currentTimestampUtc.toLocaleString(
         config.locale ?? DiscordNative.locale,
-        { timeZone: config.timezone })
+        { timeZone: config.timeZone })
     );
+
+    const isSameAsYours = Intl.DateTimeFormat().resolvedOptions().timeZone === config.timeZone;
 
     return desiredTimeZoneDate
         ? (
@@ -52,7 +49,7 @@ function CurrentLocalTimestampComponent({ userId }: { userId: string; }) {
                     style={{ color: "var(--header-primary)" }}
                 >Timezone Info</Text>
                 <Text tag="p">
-                    Their local time: <Timestamp timestamp={desiredTimeZoneDate}></Timestamp>
+                    Their local time: {isSameAsYours ? "same as yours" : <Timestamp timestamp={desiredTimeZoneDate}></Timestamp>}
                 </Text>
             </>
         )

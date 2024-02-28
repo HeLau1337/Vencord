@@ -6,10 +6,7 @@
 
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { CopyIcon } from "@components/Icons";
-import { Devs } from "@utils/constants";
-import definePlugin from "@utils/types";
 import { Clipboard, Menu } from "@webpack/common";
-import type { Channel, User } from "discord-types/general";
 
 import { muiStoreService } from "../index";
 import { settings } from "../settings";
@@ -50,7 +47,7 @@ export const UserContextMenuPatch: NavContextMenuPatchCallback = (children, { us
                     } else {
                         const config: UserTimestampConfig = {
                             userId: user.id,
-                            timezone: "",
+                            timeZone: "",
                             showInMessages: true
                         };
                         await muiStoreService.storeUserTimezoneConfig(config);

@@ -8,7 +8,7 @@ import type { Channel, User } from "discord-types/general";
 
 export interface UserTimestampConfig {
     userId: string;
-    timezone: string;
+    timeZone: string;
     showInMessages: boolean;
     locale?: string;
 }
