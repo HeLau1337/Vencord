@@ -7,6 +7,8 @@
 import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 
+import { DataPortComponent } from "./components/DataPortComponent";
+
 export const settings = definePluginSettings({
     "24h Time": {
         type: OptionType.BOOLEAN,
@@ -24,5 +26,11 @@ export const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         description: "Show time in profiles",
         default: true
+    },
+
+    exportImportData: {
+        type: OptionType.COMPONENT,
+        description: "bla",
+        component: DataPortComponent
     }
 });
