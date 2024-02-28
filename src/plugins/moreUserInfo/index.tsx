@@ -15,6 +15,9 @@ import {
 import { UserContextMenuPatch } from "./components/UserContextMenuPatch";
 import { MuiStoreService } from "./muiStoreService";
 import { settings } from "./settings";
+import type { Guild, GuildMember } from "discord-types/general";
+import UserPermissions from "../permissionsViewer/components/UserPermissions";
+import { CurrentLocalTimestampComponentWrapper } from "./components/CurrentLocalTimestampComponent";
 
 // Parts of the plugin used the PronounDB plugin's code as inspiration
 
@@ -51,17 +54,26 @@ export default definePlugin({
                 replace: "[$1, $self.LocalTimestampChatComponentWrapper(arguments[0])]"
             }
         },
+        {
+            find: ".popularApplicationCommandIds,",
+            replacement: {
+                match: /showBorder:(.{0,60})}\),(?<=guild:(\i),guildMember:(\i),.+?)/,
+                replace: (m, showBorder, guild, guildMember) => `${m}$self.CurrentLocalTimestampComponentWrapper(${guildMember}),`
+            }
+        }
         // Patch the profile popout username header to use our pronoun hook instead of Discord's pronouns
-        /* {
+        /*
+        {
             find: ".userTagNoNickname",
             replacement: [
                 {
                     match: /{user:(\i),[^}]*,pronouns:(\i),[^}]*}=\i;/,
                     replace: "$&let vcPronounSource;[$2,vcPronounSource]=$self.useProfilePronouns($1.id);"
                 },
-                PRONOUN_TOOLTIP_PATCH
+                // PRONOUN_TOOLTIP_PATCH
             ]
-        }, */
+        },
+        */
         // Patch the profile modal username header to use our pronoun hook instead of Discord's pronouns
         /* {
             find: ".nameTagSmall)",
@@ -83,4 +95,5 @@ export default definePlugin({
     LocalTimestampChatComponentWrapper,
     CompactLocalTimestampChatComponentWrapper,
     // useProfilePronouns
+    CurrentLocalTimestampComponentWrapper: (guildMember: GuildMember | undefined,) => !!guildMember && <CurrentLocalTimestampComponentWrapper userId={guildMember.userId} />,
 });
