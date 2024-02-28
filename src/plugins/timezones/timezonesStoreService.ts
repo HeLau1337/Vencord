@@ -30,4 +30,9 @@ export class TimezonesStoreService {
         this.userTimezoneCache[userId] = timezone;
         await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
     }
+
+    async overrideStoredData(newData: Record<string, string>) {
+        this.userTimezoneCache = newData;
+        await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
+    }
 }
