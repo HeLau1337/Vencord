@@ -4,124 +4,27 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/*
+* This is a "fork" of the vc-timezones repository by Syncxv on GitHub: https://github.com/Syncxv/vc-timezones
+*/
+
 import "./styles.css";
 
-import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
-import * as DataStore from "@api/DataStore";
-import { definePluginSettings } from "@api/Settings";
-import ErrorBoundary from "@components/ErrorBoundary";
+import { addContextMenuPatch, removeContextMenuPatch } from "@api/ContextMenu";
 import { Devs } from "@utils/constants";
-import { openModal } from "@utils/modal";
-import definePlugin, { OptionType } from "@utils/types";
+import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { i18n, Menu, Tooltip, useEffect, useState } from "@webpack/common";
 import { Message, User } from "discord-types/general";
 
-import { SetTimezoneModal } from "./TimezoneModal";
+import { TimestampComponent } from "./components/TimestampComponent";
+import { userContextMenuPatch } from "./components/UserContextMenuPatch";
+import { settings } from "./settings";
+import { TimezonesStoreService } from "./timezonesStoreService";
+import { getTime } from "./utils";
 
-export const DATASTORE_KEY = "vencord-timezones";
+export const classes = findByPropsLazy("timestamp", "compact", "content");
 
-export let timezones: Record<string, string | null> = {};
-(async () => {
-    timezones = await DataStore.get<Record<string, string>>(DATASTORE_KEY) || {};
-})();
-
-const classes = findByPropsLazy("timestamp", "compact", "content");
-
-export const settings = definePluginSettings({
-    "24h Time": {
-        type: OptionType.BOOLEAN,
-        description: "Show time in 24h format",
-        default: false
-    },
-
-    showMessageHeaderTime: {
-        type: OptionType.BOOLEAN,
-        description: "Show time in message headers",
-        default: true
-    },
-
-    showProfileTime: {
-        type: OptionType.BOOLEAN,
-        description: "Show time in profiles",
-        default: true
-    }
-});
-
-function getTime(timezone: string, timestamp: string | number, props: Intl.DateTimeFormatOptions = {}) {
-    const date = new Date(timestamp);
-    const formatter = new Intl.DateTimeFormat(i18n?.getLocale?.() ?? "en-US", {
-        hour12: !settings.store["24h Time"],
-        timeZone: timezone,
-        ...props
-    });
-    return formatter.format(date);
-}
-
-interface Props {
-    userId: string;
-    timestamp?: string;
-    type: "message" | "profile";
-}
-const TimestampComponent = ErrorBoundary.wrap(({ userId, timestamp, type }: Props) => {
-    const [currentTime, setCurrentTime] = useState(timestamp || Date.now());
-    const timezone = timezones[userId];
-
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-
-        if (type === "profile") {
-            setCurrentTime(Date.now());
-
-            const now = new Date();
-            const delay = (60 - now.getSeconds()) * 1000 + 1000 - now.getMilliseconds();
-
-            timer = setTimeout(() => {
-                setCurrentTime(Date.now());
-            }, delay);
-        }
-
-        return () => timer && clearTimeout(timer);
-    }, [type, currentTime]);
-
-    if (!timezone) return null;
-
-    const shortTime = getTime(timezone, currentTime, { hour: "numeric", minute: "numeric" });
-    const longTime = getTime(timezone, currentTime, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-    });
-    return (
-        <Tooltip
-            position="top"
-            // @ts-ignore
-            delay={750}
-            allowOverflow={false}
-            spacing={8}
-            hideOnClick={true}
-            tooltipClassName="timezone-tooltip"
-            text={longTime}
-        >
-            {toolTipProps => {
-                return (
-                    <span
-                        {...toolTipProps}
-                        className={type === "message" ? `timezone-message-item ${classes.timestamp}` : "timezone-profile-item"}
-                    >
-                        {
-                            type === "message" ? `(${shortTime})` : shortTime
-                        }
-                    </span>
-                );
-            }}
-        </Tooltip>
-    );
-}, { noop: true });
-
+export const timezonesStoreService = new TimezonesStoreService();
 
 export default definePlugin({
     name: "Timezone",
@@ -174,21 +77,4 @@ export default definePlugin({
     stop() {
         removeContextMenuPatch("user-context", userContextMenuPatch);
     }
-
 });
-
-
-const userContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: { user: User; }) => () => {
-    if (user?.id == null) return;
-
-    const setTimezoneItem = (
-        <Menu.MenuItem
-            label="Set Timezone"
-            id="set-timezone"
-            action={() => openModal(modalProps => <SetTimezoneModal userId={user.id} modalProps={modalProps} />)}
-        />
-    );
-
-    children.push(<Menu.MenuSeparator />, setTimezoneItem);
-
-};
