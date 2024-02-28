@@ -1,10 +1,11 @@
 import { Message, User } from "discord-types/general";
 import { settings } from "../settings";
 import { React, Timestamp, UserStore, Text } from "@webpack/common";
-import { muiStoreService } from "../index";
+import { utzStoreService } from "../index";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { classes } from "@utils/misc";
 import { findByPropsLazy } from "@webpack";
+import { convertUtcDateToUsersLocalDate } from "../utils";
 
 
 const styles: Record<string, string> = findByPropsLazy("timestampInline");
@@ -30,17 +31,14 @@ export const CurrentLocalTimestampComponentWrapper = ErrorBoundary.wrap(({ userI
 
 function CurrentLocalTimestampComponent({ userId }: { userId: string; }) {
     const currentTimestampUtc = new Date(Date.now());
-    const config = muiStoreService.getUserTimezoneConfigCache(userId);
+    const config = utzStoreService.getUserTimeZoneConfigCache(userId);
     if (!config || config.timeZone === "Universal") return null;
 
-    const desiredTimeZoneDate = new Date(currentTimestampUtc.toLocaleString(
-        config.locale ?? DiscordNative.locale,
-        { timeZone: config.timeZone })
-    );
+    const convertedTimestamp = convertUtcDateToUsersLocalDate(currentTimestampUtc, config);
 
     const isSameAsYours = Intl.DateTimeFormat().resolvedOptions().timeZone === config.timeZone;
 
-    return desiredTimeZoneDate
+    return convertedTimestamp
         ? (
             <>
                 <Text
@@ -48,8 +46,8 @@ function CurrentLocalTimestampComponent({ userId }: { userId: string; }) {
                     variant="eyebrow"
                     style={{ color: "var(--header-primary)" }}
                 >Timezone Info</Text>
-                <Text tag="p">
-                    Their local time: {isSameAsYours ? "same as yours" : <Timestamp timestamp={desiredTimeZoneDate}></Timestamp>}
+                <Text variant="text-sm/normal" tag="p">
+                    Their current local time: {isSameAsYours ? "same as yours" : <Timestamp timestamp={convertedTimestamp}></Timestamp>}
                 </Text>
             </>
         )

@@ -30,8 +30,8 @@ import {
 import { User } from "discord-types/general";
 import moment from "moment-timezone";
 
-import { muiStoreService } from "../index";
-import { UserTimestampConfig } from "../types";
+import { utzStoreService } from "../index";
+import { UserTimeZoneConfig } from "../types";
 import { Common } from "webpack";
 import { SelectOption } from "@webpack/types";
 
@@ -61,7 +61,7 @@ function buildTimeZoneOption(tzName: string): SelectOption {
     }
 
     const spacer = "  |  ";
-    let label = tzName;
+    let label = tzName.replace("_", " ");
     if (abbr) label += `${spacer}${abbr}`;
     if (gmtOffset) label += `${spacer}${gmtOffset}`;
     return {
@@ -87,7 +87,7 @@ function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }
 
     const canSubmit = () => Object.values(errors).every(e => !e);
 
-    const userTimestampConfig = muiStoreService.getUserTimezoneConfigCache(user.id);
+    const userTimestampConfig = utzStoreService.getUserTimeZoneConfigCache(user.id);
     const ref = useRef<HTMLDivElement>(null);
     const [selectedTimezone, setSelectedTimezone] = useState<string>(userTimestampConfig.timeZone);
     const [showLocalTimestampsInMessages, setShowLocalTimestampsInMessages] = useState<boolean>(userTimestampConfig.showInMessages);
@@ -95,12 +95,12 @@ function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }
     const tzSelectOptions: ReadonlyArray<SelectOption> = getTimeZoneSelectOptions();
 
     async function saveAndClose() {
-        const newConfig: UserTimestampConfig = {
+        const newConfig: UserTimeZoneConfig = {
             ...userTimestampConfig,
             timeZone: selectedTimezone,
             showInMessages: showLocalTimestampsInMessages
         };
-        await muiStoreService.storeUserTimezoneConfig(newConfig);
+        await utzStoreService.storeUserTimezoneConfig(newConfig);
         onClose();
     }
 
@@ -119,7 +119,7 @@ function UserModal({ modalProps, user }: { modalProps: ModalProps; user: User; }
                             </Forms.FormTitle>
                             <div className={Margins.bottom20}>
                                 <Common.SearchableSelect
-                                    placeholder={`${user.username}'s timezone`}
+                                    placeholder={`${user.username}'s time zone`}
                                     options={tzSelectOptions}
                                     onChange={v => setSelectedTimezone(v)}
                                     value={buildTimeZoneOption(selectedTimezone)}

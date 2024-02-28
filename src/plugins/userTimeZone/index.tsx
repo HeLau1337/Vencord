@@ -13,7 +13,7 @@ import {
     LocalTimestampChatComponentWrapper
 } from "./components/LocalTimestampChatComponent";
 import { UserContextMenuPatch } from "./components/UserContextMenuPatch";
-import { MuiStoreService } from "./muiStoreService";
+import { UtzStoreService } from "./utzStoreService";
 import { settings } from "./settings";
 import type { Guild, GuildMember } from "discord-types/general";
 import UserPermissions from "../permissionsViewer/components/UserPermissions";
@@ -21,7 +21,7 @@ import { CurrentLocalTimestampComponentWrapper } from "./components/CurrentLocal
 
 // Parts of the plugin used the PronounDB plugin's code as inspiration
 
-export const muiStoreService = new MuiStoreService();
+export const utzStoreService = new UtzStoreService();
 
 export default definePlugin({
     name: "MoreUserInfo",
@@ -29,7 +29,7 @@ export default definePlugin({
     description: "Adds some options for showing information about other users.",
 
     start() {
-        muiStoreService.refreshCache();
+        utzStoreService.refreshCache();
         addContextMenuPatch("user-context", UserContextMenuPatch);
     },
 
@@ -38,6 +38,7 @@ export default definePlugin({
     },
 
     patches: [
+        /*
         // Add user's local timestamp next to username (compact mode)
         {
             find: "showCommunicationDisabledStyles",
@@ -46,6 +47,7 @@ export default definePlugin({
                 replace: "$1, $self.CompactLocalTimestampChatComponentWrapper(arguments[0])"
             }
         },
+        */
         // Patch the chat timestamp element (normal mode) to add user's local timestamp
         {
             find: "showCommunicationDisabledStyles",

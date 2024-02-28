@@ -22,27 +22,7 @@ import { OptionType } from "@utils/types";
 export const settings = definePluginSettings({
     enableUserTimestamps: {
         type: OptionType.BOOLEAN,
-        description: "Show user's local timestamps in their profile and add an option to enable it for messages (you will need to tell the plugin who is located in which timezone).",
+        description: "Show user's local timestamps in their profile and add an option to enable it for messages (you will need to tell the plugin who is located in which time zone).",
         default: true
     },
-    /* showInProfile: {
-        type: OptionType.BOOLEAN,
-        description: "Show in profile",
-        default: true
-    }
-    timestampFormat: {
-        type: OptionType.SELECT,
-        description: "The format for the user's local timestamps",
-        options: [
-            {
-                label: "Lowercase",
-                value: PronounsFormat.Lowercase,
-                default: true
-            },
-            {
-                label: "Capitalized",
-                value: PronounsFormat.Capitalized
-            }
-        ]
-    },*/
 });

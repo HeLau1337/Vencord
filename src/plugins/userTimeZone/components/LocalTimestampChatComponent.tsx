@@ -22,8 +22,9 @@ import { findByPropsLazy } from "@webpack";
 import { Timestamp, UserStore } from "@webpack/common";
 import { Message } from "discord-types/general";
 
-import { muiStoreService } from "../index";
+import { utzStoreService } from "../index";
 import { settings } from "../settings";
+import { convertUtcDateToUsersLocalDate } from "../utils";
 
 const styles: Record<string, string> = findByPropsLazy("timestampInline");
 
@@ -36,7 +37,7 @@ function shouldShow(message: Message): boolean {
         return false;
     if (message.author.id === UserStore.getCurrentUser().id)
         return false;
-    const config = muiStoreService.getUserTimezoneConfigCache(message.author.id);
+    const config = utzStoreService.getUserTimeZoneConfigCache(message.author.id);
     if (!config || !config.showInMessages)
         return false;
     if (config.timeZone === Intl.DateTimeFormat().resolvedOptions().timeZone)
@@ -59,19 +60,16 @@ export const CompactLocalTimestampChatComponentWrapper = ErrorBoundary.wrap(({ m
 
 function LocalTimestampChatComponent({ message }: { message: Message; }) {
     const messageTimestampUtc = new Date(message.timestamp.valueOf());
-    const config = muiStoreService.getUserTimezoneConfigCache(message.author.id);
+    const config = utzStoreService.getUserTimeZoneConfigCache(message.author.id);
     if (!config || config.timeZone === "Universal") return null;
 
-    const desiredTimeZoneDate = new Date(messageTimestampUtc.toLocaleString(
-        config.locale ?? DiscordNative.locale,
-        { timeZone: config.timeZone })
-    );
+    const convertedTimestamp = convertUtcDateToUsersLocalDate(messageTimestampUtc, config);
 
-    return desiredTimeZoneDate
+    return convertedTimestamp
         ? (
             <span
                 className={classes(styles.timestampInline, styles.timestamp)}
-            >• Their local time:<Timestamp timestamp={desiredTimeZoneDate}></Timestamp></span>
+            >• Their local time:<Timestamp timestamp={convertedTimestamp}></Timestamp></span>
         )
         : null;
 }
