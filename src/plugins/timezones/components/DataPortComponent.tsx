@@ -28,7 +28,7 @@ export function DataPortComponent() {
                 const fileContent = e.target?.result;
                 if (fileContent) {
                     const data = JSON.parse(fileContent.toString());
-                    timezonesStoreService.overrideStoredData(data).then(() => {
+                    timezonesStoreService.overwriteStoredData(data).then(() => {
                         console.log("[vc-timezones] New data successfully imported into local db!");
                     });
                 }
@@ -46,7 +46,7 @@ export function DataPortComponent() {
 
     const exportData = async () => {
         console.log("[vc-timezones] Exporting data...");
-        const data = await timezonesStoreService.fetchTimezonesData();
+        const data = await timezonesStoreService.getAllTimezonesData();
         const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
             JSON.stringify(data)
         )}`;
