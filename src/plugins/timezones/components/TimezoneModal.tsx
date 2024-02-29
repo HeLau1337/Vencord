@@ -17,6 +17,7 @@ export function SetTimezoneModal({ userId, modalProps }: { userId: string, modal
     const [currentValue, setCurrentValue] = useState<string | null>(timezonesStoreService.getUserTimezone(userId) ?? null);
 
     const options = useMemo(() => {
+        // @ts-ignore
         return Intl.supportedValuesOf("timeZone").map(timezone => {
             const offset = new Intl.DateTimeFormat(undefined, { timeZone: timezone, timeZoneName: "short" })
                 .formatToParts(new Date())
