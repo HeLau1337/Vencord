@@ -28,9 +28,23 @@ export const settings = definePluginSettings({
         default: true
     },
 
+    useSettingsJsonForTimezoneData: {
+        type: OptionType.BOOLEAN,
+        description: "Use Vencord's settings.json to store (and sync) the timezone data",
+        default: false,
+        restartNeeded: true,
+    },
+
     exportImportData: {
         type: OptionType.COMPONENT,
-        description: "bla",
+        description: "Export and import your local data manually (using json files).",
         component: DataPortComponent
+    },
+
+    timezoneData: {
+        type: OptionType.COMPONENT,
+        description: "",
+        component: () => <></>,
+        hidden: true
     }
 });

@@ -9,3 +9,8 @@ export interface LocalUserTimestamp {
     timestamp?: string;
     type: "message" | "profile";
 }
+
+export interface TimezoneDataStore {
+    // key: userId, value: name of user's timezone
+    [key: string]: string | null;
+}

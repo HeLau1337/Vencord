@@ -6,20 +6,52 @@
 
 import * as DataStore from "@api/DataStore";
 
+import { settings } from "./settings";
+import { TimezoneDataStore } from "./types";
+
 export class TimezonesStoreService {
     private readonly DATASTORE_KEY = "vencord-timezones";
 
-    private userTimezoneCache: Record<string, string | null> = {};
+    private userTimezoneCache: TimezoneDataStore = {};
 
     constructor() {
-        this.fetchTimezonesData().then(timezones => {
+        let dbData;
+        this.fetchTimezonesDataFromDb().then(timezones => {
             if (timezones)
-                this.userTimezoneCache = timezones;
+                dbData = timezones;
+        }).finally(() => {
+            const settingsJsonData: TimezoneDataStore = settings.store.timezoneData;
+
+            if (settings.store.useSettingsJsonForTimezoneData && settingsJsonData) {
+                this.userTimezoneCache = settingsJsonData;
+            } else if (!settings.store.useSettingsJsonForTimezoneData && dbData) {
+                this.userTimezoneCache = dbData;
+            } else if (!settings.store.useSettingsJsonForTimezoneData && !dbData && settingsJsonData) {
+                this.userTimezoneCache = settingsJsonData;
+            } else if (settings.store.useSettingsJsonForTimezoneData && !settingsJsonData && dbData) {
+                this.userTimezoneCache = dbData;
+            }
+            this.overwriteStoredData(this.userTimezoneCache);
         });
     }
 
-    async fetchTimezonesData(): Promise<Record<string, string>> {
-        return await DataStore.get<Record<string, string>>(this.DATASTORE_KEY) || {};
+    private async fetchTimezonesDataFromDb(): Promise<TimezoneDataStore | undefined> {
+        const data = await DataStore.get<TimezoneDataStore>(this.DATASTORE_KEY);
+        if (data) {
+            if (!settings.store.useSettingsJsonForTimezoneData) this.userTimezoneCache = data;
+            return data;
+        }
+    }
+
+    async getAllTimezonesData(): Promise<TimezoneDataStore> {
+        if (settings.store.useSettingsJsonForTimezoneData) {
+            return new Promise<TimezoneDataStore>((resolve, reject) => {
+                this.userTimezoneCache = settings.store.timezoneData ?? {};
+                resolve(this.userTimezoneCache);
+            });
+        } else {
+            return await this.fetchTimezonesDataFromDb() ?? {};
+        }
     }
 
     getUserTimezone(userId: string): string | null {
@@ -28,11 +60,18 @@ export class TimezonesStoreService {
 
     async setUserTimezone(userId: string, timezone: string | null) {
         this.userTimezoneCache[userId] = timezone;
-        await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
+        await this.overwriteStoredData(this.userTimezoneCache);
     }
 
-    async overrideStoredData(newData: Record<string, string>) {
+    async overwriteStoredData(newData: TimezoneDataStore) {
         this.userTimezoneCache = newData;
-        await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
+        if (settings.store.useSettingsJsonForTimezoneData) {
+            await new Promise<void>((resolve, reject) => {
+                settings.store.timezoneData = this.userTimezoneCache;
+                resolve();
+            });
+        } else {
+            await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
+        }
     }
 }
