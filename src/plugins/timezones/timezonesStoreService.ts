@@ -5,6 +5,7 @@
  */
 
 import * as DataStore from "@api/DataStore";
+import { isObject } from "@utils/misc";
 
 import { settings } from "./settings";
 import { TimezoneDataStore } from "./types";
@@ -21,14 +22,15 @@ export class TimezonesStoreService {
                 dbData = timezones;
         }).finally(() => {
             const settingsJsonData: TimezoneDataStore = settings.store.timezoneData;
-
-            if (settings.store.useSettingsJsonForTimezoneData && settingsJsonData) {
+            const dbDataValid = this.isValid(dbData);
+            const jsonDataValid = this.isValid(settingsJsonData);
+            if (settings.store.useSettingsJsonForTimezoneData && jsonDataValid) {
                 this.userTimezoneCache = settingsJsonData;
-            } else if (!settings.store.useSettingsJsonForTimezoneData && dbData) {
+            } else if (!settings.store.useSettingsJsonForTimezoneData && dbDataValid) {
                 this.userTimezoneCache = dbData;
-            } else if (!settings.store.useSettingsJsonForTimezoneData && !dbData && settingsJsonData) {
+            } else if (!settings.store.useSettingsJsonForTimezoneData && !dbDataValid && jsonDataValid) {
                 this.userTimezoneCache = settingsJsonData;
-            } else if (settings.store.useSettingsJsonForTimezoneData && !settingsJsonData && dbData) {
+            } else if (settings.store.useSettingsJsonForTimezoneData && !jsonDataValid && dbDataValid) {
                 this.userTimezoneCache = dbData;
             }
             this.overwriteStoredData(this.userTimezoneCache);
@@ -63,15 +65,35 @@ export class TimezonesStoreService {
         await this.overwriteStoredData(this.userTimezoneCache);
     }
 
+    private isValid(data: any): boolean {
+        console.debug("[vc-timezones] Starting data validation for the following input:", data);
+        if (isObject(data)) {
+            for (const key in data) {
+                if (!/^[0-9]+$/.test(key) || (typeof data[key] !== "string" && data[key] !== null)) {
+                    console.debug(`[vc-timezones] Data validation | INVALID key-value-pair found: ${key}: ${data[key]}`);
+                    return false; // Key not a string of digits or value not a string
+                }
+                console.debug(`[vc-timezones] Data validation | valid key-value-pair: ${key}: ${data[key]}`);
+            }
+            console.debug("[vc-timezones] Data validation | Successfully completed!");
+            return true;
+        }
+        console.debug("[vc-timezones] Data validation | input data is not an object");
+        return false;
+    }
+
     async overwriteStoredData(newData: TimezoneDataStore) {
+        if (!this.isValid(newData)) {
+            return new Promise<void>((resolve, reject) => reject("Invalid input data!"));
+        }
         this.userTimezoneCache = newData;
         if (settings.store.useSettingsJsonForTimezoneData) {
-            await new Promise<void>((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 settings.store.timezoneData = this.userTimezoneCache;
                 resolve();
             });
         } else {
-            await DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
+            return DataStore.set(this.DATASTORE_KEY, this.userTimezoneCache);
         }
     }
 }
