@@ -69,11 +69,12 @@ export class TimezonesStoreService {
         console.debug("[vc-timezones] Starting data validation for the following input:", data);
         if (isObject(data)) {
             for (const key in data) {
-                if (!/^[0-9]+$/.test(key) || (typeof data[key] !== "string" && data[key] !== null)) {
-                    console.debug(`[vc-timezones] Data validation | INVALID key-value-pair found: ${key}: ${data[key]}`);
+                const value = data[key];
+                if (!/^[0-9]+$/.test(key) || (typeof value !== "string" && value !== null)) {
+                    console.debug(`[vc-timezones] Data validation | INVALID key-value-pair found: ${key}: ${value}`);
                     return false; // Key not a string of digits or value not a string
                 }
-                console.debug(`[vc-timezones] Data validation | valid key-value-pair: ${key}: ${data[key]}`);
+                console.debug(`[vc-timezones] Data validation | valid key-value-pair: ${key}: ${value}`);
             }
             console.debug("[vc-timezones] Data validation | Successfully completed!");
             return true;
