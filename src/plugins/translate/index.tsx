@@ -66,7 +66,8 @@ export default definePlugin({
     start() {
         addAccessory("vc-translation", props => <TranslationAccessory message={props.message} />);
 
-        addChatBarButton("vc-translate", TranslateChatBarIcon);
+        if (settings.store.addChatBarButton)
+            addChatBarButton("vc-translate", TranslateChatBarIcon);
 
         addButton("vc-translate", message => {
             if (!message.content) return null;
@@ -93,7 +94,8 @@ export default definePlugin({
 
     stop() {
         removePreSendListener(this.preSend);
-        removeChatBarButton("vc-translate");
+        if (settings.store.addChatBarButton)
+            removeChatBarButton("vc-translate");
         removeButton("vc-translate");
         removeAccessory("vc-translation");
     },
