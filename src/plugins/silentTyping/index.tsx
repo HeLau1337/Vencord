@@ -21,7 +21,9 @@ import { ApplicationCommandInputType, ApplicationCommandOptionType, findOption, 
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { FluxDispatcher, React } from "@webpack/common";
+import { FluxDispatcher, PresenceStore, React, UserStore } from "@webpack/common";
+
+let autoEnableStopped = false;
 
 const settings = definePluginSettings({
     showIcon: {
@@ -34,6 +36,15 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         description: "Toggle functionality",
         default: true,
+    },
+    automaticallyEnableIfInvisible: {
+        type: OptionType.BOOLEAN,
+        description: "Automatically enable silent typing if you change your status to 'invisible'",
+        default: false,
+        restartNeeded: true,
+        onChange(newValue: boolean) {
+            autoEnableStopped = !newValue;
+        }
     }
 });
 
@@ -55,6 +66,28 @@ const SilentTypingToggle: ChatBarButton = ({ isMainChat }) => {
         </ChatBarButton>
     );
 };
+
+function startStatusChangeListener() {
+    const currentUserId = UserStore.getCurrentUser().id;
+    let ownStatus = PresenceStore.getStatus(currentUserId) || "offline";
+    PresenceStore.addChangeListener(() => {
+        if (autoEnableStopped) return;
+        const newOwnStatus = PresenceStore.getStatus(currentUserId) || "offline";
+        if (ownStatus !== newOwnStatus) {
+            ownStatus = newOwnStatus;
+            if (ownStatus === "invisible" && settings.store.automaticallyEnableIfInvisible) {
+                settings.store.isEnabled = true;
+            } else if (ownStatus !== "invisible" && settings.store.automaticallyEnableIfInvisible) {
+                settings.store.isEnabled = false;
+            }
+        }
+    });
+}
+
+function stopStatusChangeListener() {
+    PresenceStore.removeChangeListener(() => {});
+    autoEnableStopped = true;
+}
 
 export default definePlugin({
     name: "SilentTyping",
@@ -98,6 +131,14 @@ export default definePlugin({
         FluxDispatcher.dispatch({ type: "TYPING_START_LOCAL", channelId });
     },
 
-    start: () => addChatBarButton("SilentTyping", SilentTypingToggle),
-    stop: () => removeChatBarButton("SilentTyping"),
+    start: () => {
+        addChatBarButton("SilentTyping", SilentTypingToggle);
+        if (settings.store.automaticallyEnableIfInvisible)
+            startStatusChangeListener();
+    },
+    stop: () => {
+        removeChatBarButton("SilentTyping");
+        if (settings.store.automaticallyEnableIfInvisible)
+            stopStatusChangeListener();
+    },
 });
