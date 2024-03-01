@@ -49,6 +49,7 @@ export function SetTimezoneModal({ userId, modalProps }: { userId: string, modal
                         maxVisibleItems={5}
                         closeOnSelect={true}
                         onChange={v => setCurrentValue(v)}
+                        autoFocus={true}
                     />
                 </section>
             </ModalContent>
@@ -70,6 +71,7 @@ export function SetTimezoneModal({ userId, modalProps }: { userId: string, modal
                         await timezonesStoreService.setUserTimezone(userId, currentValue!);
                         modalProps.onClose();
                     }}
+                    autoFocus={true}
                 >
                     Save
                 </Button>

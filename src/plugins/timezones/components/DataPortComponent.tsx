@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { NotificationData, showNotification } from "@api/Notifications";
 import { Flex } from "@components/Flex";
 import { useForceUpdater } from "@utils/react";
 import { Button, React, Text, Tooltip, useState } from "@webpack/common";
@@ -16,36 +17,56 @@ export function DataPortComponent() {
     const [selectedFile, setSelectedFile] = useState<File>();
 
     const handleFileChange = event => {
-        console.log("[vc-timezones] File was selected");
-        const file = event.target.files[0];
-        setSelectedFile(file);
-        if (file) {
-            const reader = new FileReader();
+        console.debug("[vc-timezones] File was selected");
+        try {
+            const file = event.target.files[0];
+            setSelectedFile(file);
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsText(file); // Read the file content as text
 
-            reader.readAsText(file); // Read the file content as text
+                reader.onload = e => {
+                    const fileContent = e.target?.result;
+                    if (fileContent) {
+                        const data = JSON.parse(fileContent.toString());
+                        timezonesStoreService.overwriteStoredData(data).then(() => {
+                            console.log("[vc-timezones] New data successfully imported into local db!");
+                            showNotification({
+                                title: "Success!",
+                                body: `Timezone user data successfully imported from '${file.name}'!`,
+                                color: "green"
+                            } as NotificationData);
+                        }).catch(reason => {
+                            console.error("[vc-timezones] Data import failed:", reason);
+                            showNotification({
+                                title: "Error!",
+                                body: `Importing timezone user data failed. Reason: ${reason}`,
+                                color: "red"
+                            } as NotificationData);
+                        });
+                    }
+                };
 
-            reader.onload = e => {
-                const fileContent = e.target?.result;
-                if (fileContent) {
-                    const data = JSON.parse(fileContent.toString());
-                    timezonesStoreService.overwriteStoredData(data).then(() => {
-                        console.log("[vc-timezones] New data successfully imported into local db!");
-                    });
-                }
-            };
-
-            reader.onerror = error => {
-                console.error("[vc-timezones] Error reading file:", error);
-            };
+                reader.onerror = error => {
+                    console.error("[vc-timezones] Error reading file:", error);
+                };
+            }
+        } catch (error) {
+            console.error("[vc-timezones] Error handling file:", error);
+            showNotification({
+                title: "Error!",
+                body: "Importing timezone user data failed for an unknown reason!",
+                color: "red"
+            } as NotificationData);
         }
     };
     const importData = () => {
-        console.log("[vc-timezones] Importing data...");
+        console.debug("[vc-timezones] Importing data...");
         document.getElementById("fileInput")?.click();
     };
 
     const exportData = async () => {
-        console.log("[vc-timezones] Exporting data...");
+        console.debug("[vc-timezones] Exporting data...");
         const data = await timezonesStoreService.getAllTimezonesData();
         const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
             JSON.stringify(data)
@@ -54,6 +75,7 @@ export function DataPortComponent() {
         link.href = jsonString;
         link.download = `vc-timezones_${getCurrentDateForFileName()}.json`;
         link.click();
+        console.log("[vc-timezones] Data export successful!");
     };
 
     return (
