@@ -257,7 +257,7 @@ export default definePlugin({
         {
             // MessageStore
             // Module 171447
-            find: "displayName=\"MessageStore\"",
+            find: '"MessageStore"',
             replacement: [
                 {
                     // Add deleted=true to all target messages in the MESSAGE_DELETE event
@@ -412,7 +412,7 @@ export default definePlugin({
         {
             // ReferencedMessageStore
             // Module 778667
-            find: "displayName=\"ReferencedMessageStore\"",
+            find: '"ReferencedMessageStore"',
             replacement: [
                 {
                     match: /MESSAGE_DELETE:function\((\i)\).+?},/,
