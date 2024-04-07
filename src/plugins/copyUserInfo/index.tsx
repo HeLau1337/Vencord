@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
+import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { CopyIcon, LinkIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
@@ -73,11 +73,7 @@ export default definePlugin({
     authors: [Devs.castdrian],
     description: "Adds options for quickly copying user info (like the username or URL to the user's profile) to the user context menu.",
     settings: settings,
-    start() {
-        addContextMenuPatch("user-context", UserContextMenuPatch);
-    },
-
-    stop() {
-        removeContextMenuPatch("user-context", UserContextMenuPatch);
-    },
+    contextMenus: {
+        "user-context": UserContextMenuPatch
+    }
 });
