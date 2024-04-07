@@ -26,7 +26,8 @@ import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ChannelStore, FluxDispatcher, i18n, Menu, Parser, Timestamp, UserStore } from "@webpack/common";
+import { ChannelStore, FluxDispatcher, i18n, Menu, MessageStore, Parser, Timestamp, UserStore } from "@webpack/common";
+import { Message } from "discord-types/general";
 
 import overlayStyle from "./deleteStyleOverlay.css?managed";
 import textStyle from "./deleteStyleText.css?managed";
@@ -44,7 +45,9 @@ function addDeleteStyle() {
 }
 
 const REMOVE_HISTORY_ID = "ml-remove-history";
+const REMOVE_ENTIRE_HISTORY_ID = "ml-remove-entire-history";
 const TOGGLE_DELETE_STYLE_ID = "ml-toggle-style";
+
 const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) => {
     const { message } = props;
     const { deleted, editHistory, id, channel_id } = message;
@@ -78,12 +81,39 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (children, props) =
                     FluxDispatcher.dispatch({
                         type: "MESSAGE_DELETE",
                         channelId: channel_id,
-                        id,
+                        id: id,
                         mlDeleted: true
                     });
                 } else {
                     message.editHistory = [];
                 }
+            }}
+        />
+    ));
+
+
+    children.push((
+        <Menu.MenuItem
+            id={REMOVE_ENTIRE_HISTORY_ID}
+            key={REMOVE_ENTIRE_HISTORY_ID}
+            label="Remove History Of All Messages"
+            color="danger"
+            action={() => {
+                const allMessages: Array<Message & { deleted: boolean; editHistory: any; }> = MessageStore.getMessages(message.channel_id)._array;
+                const deletedMessageIds: string[] = allMessages
+                    .filter(message => message.deleted)
+                    .map(message => message.id);
+                if (deletedMessageIds.length > 0) {
+                    FluxDispatcher.dispatch({
+                        type: "MESSAGE_DELETE_BULK",
+                        channelId: channel_id,
+                        ids: deletedMessageIds,
+                        mlDeleted: true
+                    });
+                }
+                allMessages.forEach(msg => {
+                    msg.editHistory = [];
+                });
             }}
         />
     ));
