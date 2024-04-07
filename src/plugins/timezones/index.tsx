@@ -10,7 +10,6 @@
 
 import "./styles.css";
 
-import { addContextMenuPatch, removeContextMenuPatch } from "@api/ContextMenu";
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
@@ -70,11 +69,7 @@ export default definePlugin({
         />;
     },
 
-    start() {
-        addContextMenuPatch("user-context", userContextMenuPatch);
-    },
-
-    stop() {
-        removeContextMenuPatch("user-context", userContextMenuPatch);
+    contextMenus: {
+        "user-context": userContextMenuPatch
     }
 });
