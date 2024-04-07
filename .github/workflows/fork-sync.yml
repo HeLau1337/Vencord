@@ -1,8 +1,8 @@
 name: Sync fork branches with parent repository
 
 on:
-    #schedule:
-        #- cron: "0 */3 * * *"
+    schedule:
+        - cron: "0 */3 * * *"
     workflow_dispatch: # on button click
 
 env:
@@ -59,30 +59,30 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Sync TextReplace branch with parent repository
-              if: ${{ needs.check-for-changes.outputs.textreplace-changes == 'true' }}
-              uses: tgymnich/fork-sync@v1.8
-              continue-on-error: true
-              with:
-                  base: textreplace
-                  head: main
-                  pr_title: Sync TextReplace branch with parent repository
-            - name: Sync MessageLogger branch with parent repository
-              if: ${{ needs.check-for-changes.outputs.messagelogger-changes == 'true' }}
-              uses: tgymnich/fork-sync@v1.8
-              continue-on-error: true
-              with:
-                  base: messagelogger
-                  head: main
-                  pr_title: Sync MessageLogger branch with parent repository
-            - name: Sync develop branch with parent repository
-              if: ${{ needs.check-for-changes.outputs.develop-changes == 'true' }}
-              uses: tgymnich/fork-sync@v1.8
-              continue-on-error: true
-              with:
-                  base: develop
-                  head: main
-                  pr_title: Sync develop branch with parent repository
+            #- name: Sync TextReplace branch with parent repository
+            #  if: ${{ needs.check-for-changes.outputs.textreplace-changes == 'true' }}
+            #  uses: tgymnich/fork-sync@v1.8
+            #  continue-on-error: true
+            #  with:
+            #      base: textreplace
+            #      head: main
+            #      pr_title: Sync TextReplace branch with parent repository
+            #- name: Sync MessageLogger branch with parent repository
+            #  if: ${{ needs.check-for-changes.outputs.messagelogger-changes == 'true' }}
+            #  uses: tgymnich/fork-sync@v1.8
+            #  continue-on-error: true
+            #  with:
+            #      base: messagelogger
+            #      head: main
+            #      pr_title: Sync MessageLogger branch with parent repository
+            #- name: Sync develop branch with parent repository
+            #  if: ${{ needs.check-for-changes.outputs.develop-changes == 'true' }}
+            #  uses: tgymnich/fork-sync@v1.8
+            #  continue-on-error: true
+            #  with:
+            #      base: develop
+            #      head: main
+            #      pr_title: Sync develop branch with parent repository
             - name: Sync main branch with parent repository
               if: ${{ needs.check-for-changes.outputs.main-changes == 'true' }}
               run: gh repo sync HeLau1337/Vencord -b main
