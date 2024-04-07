@@ -1,8 +1,8 @@
 name: Sync fork branches with parent repository
 
 on:
-    schedule:
-        - cron: "0 */3 * * *" # runs every hour
+    #schedule:
+        #- cron: "0 */3 * * *"
     workflow_dispatch: # on button click
 
 env:
