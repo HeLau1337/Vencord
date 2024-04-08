@@ -30,7 +30,7 @@ interface UserContextProps {
     user: User;
 }
 
-const UserContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: UserContextProps) => () => {
+const UserContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: UserContextProps) => {
     if (!user) return;
 
     if (settings.store.addCopyUserUrl)
