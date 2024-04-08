@@ -61,7 +61,11 @@ export class TimezonesStoreService {
     }
 
     async setUserTimezone(userId: string, timezone: string | null) {
-        this.userTimezoneCache[userId] = timezone;
+        if (timezone == null) {
+            delete this.userTimezoneCache[userId];
+        } else {
+            this.userTimezoneCache[userId] = timezone;
+        }
         await this.overwriteStoredData(this.userTimezoneCache);
     }
 
