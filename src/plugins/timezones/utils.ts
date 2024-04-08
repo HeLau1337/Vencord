@@ -11,7 +11,7 @@ import { settings } from "./settings";
 export function getTime(timezone: string, timestamp: string | number, props: Intl.DateTimeFormatOptions = {}) {
     const date = new Date(timestamp);
     const formatter = new Intl.DateTimeFormat(i18n?.getLocale?.() ?? "en-US", {
-        hour12: !settings.store["24h Time"],
+        hour12: !settings.store.time24h,
         timeZone: timezone,
         ...props
     });

@@ -10,7 +10,7 @@ import { OptionType } from "@utils/types";
 import { DataPortComponent } from "./components/DataPortComponent";
 
 export const settings = definePluginSettings({
-    "24h Time": {
+    time24h: {
         type: OptionType.BOOLEAN,
         description: "Show time in 24h format",
         default: false
