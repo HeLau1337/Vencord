@@ -18,10 +18,11 @@
 
 import { addChatBarButton, ChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { ApplicationCommandInputType, ApplicationCommandOptionType, findOption, sendBotMessage } from "@api/Commands";
+import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { FluxDispatcher, PresenceStore, React, UserStore } from "@webpack/common";
+import { FluxDispatcher, Menu, PresenceStore, React, UserStore } from "@webpack/common";
 
 let autoEnableStopped = false;
 
@@ -31,6 +32,11 @@ const settings = definePluginSettings({
         default: false,
         description: "Show an icon for toggling the plugin",
         restartNeeded: true,
+    },
+    contextMenu: {
+        type: OptionType.BOOLEAN,
+        description: "Add option to toggle the functionality in the chat input context menu",
+        default: true
     },
     isEnabled: {
         type: OptionType.BOOLEAN,
@@ -67,6 +73,27 @@ const SilentTypingToggle: ChatBarButton = ({ isMainChat }) => {
     );
 };
 
+
+const ChatBarContextCheckbox: NavContextMenuPatchCallback = children => {
+    const { isEnabled, contextMenu } = settings.use(["isEnabled", "contextMenu"]);
+    if (!contextMenu) return;
+
+    const group = findGroupChildrenByChildId("submit-button", children);
+
+    if (!group) return;
+
+    const idx = group.findIndex(c => c?.props?.id === "submit-button");
+
+    group.splice(idx + 1, 0,
+        <Menu.MenuCheckboxItem
+            id="vc-silent-typing"
+            label="Enable Silent Typing"
+            checked={isEnabled}
+            action={() => settings.store.isEnabled = !settings.store.isEnabled}
+        />
+    );
+};
+
 function startStatusChangeListener() {
     const currentUserId = UserStore.getCurrentUser().id;
     let ownStatus = PresenceStore.getStatus(currentUserId) || "offline";
@@ -85,17 +112,19 @@ function startStatusChangeListener() {
 }
 
 function stopStatusChangeListener() {
-    PresenceStore.removeChangeListener(() => {});
+    PresenceStore.removeChangeListener(() => { });
     autoEnableStopped = true;
 }
 
 export default definePlugin({
     name: "SilentTyping2",
-    authors: [Devs.Ven, Devs.Rini],
+    authors: [Devs.Ven, Devs.Rini, Devs.ImBanana],
     description: "[Hendrik's fork] Hide that you are typing",
     dependencies: ["CommandsAPI", "ChatInputButtonAPI"],
     settings,
-
+    contextMenus: {
+        "textarea-context": ChatBarContextCheckbox
+    },
     patches: [
         {
             find: '.dispatch({type:"TYPING_START_LOCAL"',
