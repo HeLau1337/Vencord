@@ -26,15 +26,15 @@ export const classes = findByPropsLazy("timestamp", "compact", "content");
 export const timezonesStoreService = new TimezonesStoreService();
 
 export default definePlugin({
-    name: "Timezone",
+    name: "Timezones2",
     authors: [Devs.Aria],
-    description: "Shows the local time of users in profiles and message headers",
+    description: "[Hendrik's fork] Shows the local time of users in profiles and message headers",
 
     patches: [
         {
-            find: ".getUserBannerStyles)",
+            find: ".NITRO_BANNER,",
             replacement: {
-                match: /getUserBannerStyles.{1,500}children:\[/,
+                match: /getUserBannerStyles.{1,600}children:\[/,
                 replace: "$&$self.renderProfileTimezone(arguments[0]),"
             }
         },
