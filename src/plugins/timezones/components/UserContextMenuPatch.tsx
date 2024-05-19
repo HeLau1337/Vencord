@@ -12,7 +12,7 @@ import { User } from "discord-types/general";
 import { SetTimezoneModal } from "./TimezoneModal";
 
 
-export const userContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: { user: User; }) => () => {
+export const userContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: { user: User; }) => {
     if (user?.id == null) return;
 
     const setTimezoneItem = (
