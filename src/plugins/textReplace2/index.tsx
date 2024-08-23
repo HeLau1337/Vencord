@@ -84,7 +84,7 @@ function RulesComponent() {
 }
 
 function stringToRegex(str: string) {
-    const match = str.match(/^(\/)?(.+?)(?:\/([gimsuy]*))?$/); // Regex to match regex
+    const match = str.match(/^(\/)?(.+?)(?:\/([gimsuyv]*))?$/); // Regex to match regex
     return match
         ? new RegExp(
             match[2], // Pattern
