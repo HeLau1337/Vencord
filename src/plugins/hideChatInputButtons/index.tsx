@@ -37,7 +37,7 @@ const settings = definePluginSettings({
 
 export default definePlugin({
     name: "HideChatInputButtons",
-    authors: [],
+    authors: [{ name: "hendrik3812", id: 286208399786377216n }],
     description: "Hides the buttons in the chat input area.",
     settings: settings,
     patches: [
