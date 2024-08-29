@@ -21,7 +21,7 @@ import { settings } from "./settings";
 import { TimezonesStoreService } from "./timezonesStoreService";
 import { getTime } from "./utils";
 
-export const classes = findByPropsLazy("timestamp", "compact", "content");
+export const classes = findByPropsLazy("timestamp", "compact", "contentOnly");
 
 export const timezonesStoreService = new TimezonesStoreService();
 
@@ -31,17 +31,19 @@ export default definePlugin({
     description: "[Hendrik's fork] Shows the local time of users in profiles and message headers",
 
     patches: [
-        {
-            find: ".NITRO_BANNER,",
+        // stolen from ViewIcons
+        ...[".NITRO_BANNER,", "=!1,canUsePremiumCustomization:"].map(find => ({
+            find,
             replacement: {
-                match: /getUserBannerStyles.{1,600}children:\[/,
+                match: /(?<=hasProfileEffect.+?)children:\[/,
                 replace: "$&$self.renderProfileTimezone(arguments[0]),"
             }
-        },
+        })),
         {
-            find: ".badgesContainer,",
+            find: '"Message Username"',
             replacement: {
-                match: /id:\(0,\i\.getMessageTimestampId\)\(\i\),timestamp.{1,50}}\),/,
+                // thanks https://github.com/Syncxv/vc-timezones/pull/4
+                match: /(?<=isVisibleOnlyOnHover.+?)id:.{1,11},timestamp.{1,50}}\),/,
                 replace: "$&,$self.renderMessageTimezone(arguments[0]),"
             }
         }
