@@ -17,7 +17,6 @@
 */
 
 import { DataStore } from "@api/index";
-import { addPreSendListener, removePreSendListener } from "@api/MessageEvents";
 import { definePluginSettings } from "@api/Settings";
 import { Flex } from "@components/Flex";
 import { DeleteIcon } from "@components/Icons";
@@ -271,6 +270,12 @@ export default definePlugin({
 
     settings,
 
+    onBeforeMessageSend(channelId, msg) {
+        // Channel used for sharing rules, applying rules here would be messy
+        if (channelId === TEXT_REPLACE_RULES_CHANNEL_ID) return;
+        msg.content = applyRules(msg.content);
+    },
+
     async start() {
         // Try to migrate data from earlier version of TextReplace where rules were stored in DataStore.
         if (!("rules" in settings.store)) {
@@ -281,14 +286,5 @@ export default definePlugin({
 
         getRulesFromSettingsJson();
 
-        this.preSend = addPreSendListener((channelId, msg) => {
-            // Channel used for sharing rules, applying rules here would be messy
-            if (channelId === TEXT_REPLACE_RULES_CHANNEL_ID) return;
-            msg.content = applyRules(msg.content);
-        });
     },
-
-    stop() {
-        removePreSendListener(this.preSend);
-    }
 });
