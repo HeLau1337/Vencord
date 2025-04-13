@@ -24,9 +24,9 @@ export default definePlugin({
     description: "Hides the gift button in the chat bar.",
     patches: [
         {
-            find: "default.Messages.PREMIUM_GIFT_BUTTON_TOOLTIP",
+            find: "\"ChannelTextAreaButtons\"",
             replacement: {
-                match: /(\i.memo\(function\(\i\){)(let{disabled:\i,channel:\i}=\i,{analyticsLocations:\i}=\(0,\i.default\)\(\i.default.GIFT_BUTTON\))/,
+                match: /(function \i\(\i\){)(let{disabled:\i,channel:\i}=\i,{enabled:\i}=_.O.useExperiment\({location:"gift-button"}\),\i=\(0,\i.\i\)\(\);)/,
                 replace: "$1return null;$2"
             }
         }
