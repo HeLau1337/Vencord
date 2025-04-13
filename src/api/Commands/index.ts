@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { Logger } from "@utils/Logger";
 import { makeCodeblock } from "@utils/text";
 
 import { sendBotMessage } from "./commandHelpers";
@@ -30,6 +31,7 @@ export const commands = {} as Record<string, Command>;
 // hack for plugins being evaluated before we can grab these from webpack
 const OptPlaceholder = Symbol("OptionalMessageOption") as any as Option;
 const ReqPlaceholder = Symbol("RequiredMessageOption") as any as Option;
+
 /**
  * Optional message option named "message" you can use in commands.
  * Used in "tableflip" or "shrug"
@@ -43,13 +45,18 @@ export let OptionalMessageOption: Option = OptPlaceholder;
  */
 export let RequiredMessageOption: Option = ReqPlaceholder;
 
+// Discord's command list has random gaps for some reason, which can cause issues while rendering the commands
+// Add this offset to every added command to keep them unique
+let commandIdOffset: number;
+
 export const _init = function (cmds: Command[]) {
     try {
         BUILT_IN = cmds;
-        OptionalMessageOption = cmds.find(c => c.name === "shrug")!.options![0];
-        RequiredMessageOption = cmds.find(c => c.name === "me")!.options![0];
+        OptionalMessageOption = cmds.find(c => (c.untranslatedName || c.displayName) === "shrug")!.options![0];
+        RequiredMessageOption = cmds.find(c => (c.untranslatedName || c.displayName) === "me")!.options![0];
+        commandIdOffset = Math.abs(BUILT_IN.map(x => Number(x.id)).sort((x, y) => x - y)[0]) - BUILT_IN.length;
     } catch (e) {
-        console.error("Failed to load CommandsApi");
+        new Logger("CommandsAPI").error("Failed to load CommandsApi", e, " - cmds is", cmds);
     }
     return cmds;
 } as never;
@@ -109,6 +116,7 @@ function registerSubCommands(cmd: Command, plugin: string) {
         const subCmd = {
             ...cmd,
             ...o,
+            options: o.options !== undefined ? o.options : undefined,
             type: ApplicationCommandType.CHAT_INPUT,
             name: `${cmd.name} ${o.name}`,
             id: `${o.name}-${cmd.id}`,
@@ -138,7 +146,9 @@ export function registerCommand<C extends Command>(command: C, plugin: string) {
         throw new Error(`Command '${command.name}' already exists.`);
 
     command.isVencordCommand = true;
-    command.id ??= `-${BUILT_IN.length + 1}`;
+    command.untranslatedName ??= command.name;
+    command.untranslatedDescription ??= command.description;
+    command.id ??= `-${BUILT_IN.length + commandIdOffset + 1}`;
     command.applicationId ??= "-1"; // BUILT_IN;
     command.type ??= ApplicationCommandType.CHAT_INPUT;
     command.inputType ??= ApplicationCommandInputType.BUILT_IN_TEXT;

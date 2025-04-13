@@ -4,13 +4,18 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { definePluginSettings } from "@api/Settings";
+import { getUserSettingLazy } from "@api/UserSettings";
+import { ImageIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
-import { getCurrentGuild } from "@utils/discord";
-import definePlugin from "@utils/types";
+import { getCurrentGuild, openImageModal } from "@utils/discord";
+import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { Clipboard, GuildStore, Menu, PermissionStore, TextAndImagesSettingsStores } from "@webpack/common";
+import { Clipboard, GuildStore, Menu, PermissionStore } from "@webpack/common";
 
 const GuildSettingsActions = findByPropsLazy("open", "selectRole", "updateGuild");
+
+const DeveloperMode = getUserSettingLazy("appearance", "developerMode")!;
 
 function PencilIcon() {
     return (
@@ -34,14 +39,39 @@ function AppearanceIcon() {
     );
 }
 
+const settings = definePluginSettings({
+    roleIconFileFormat: {
+        type: OptionType.SELECT,
+        description: "File format to use when viewing role icons",
+        options: [
+            {
+                label: "png",
+                value: "png",
+                default: true
+            },
+            {
+                label: "webp",
+                value: "webp",
+            },
+            {
+                label: "jpg",
+                value: "jpg"
+            }
+        ]
+    }
+});
+
 export default definePlugin({
     name: "BetterRoleContext",
-    description: "Adds options to copy role color / edit role when right clicking roles in the user profile",
-    authors: [Devs.Ven],
+    description: "Adds options to copy role color / edit role / view role icon when right clicking roles in the user profile",
+    authors: [Devs.Ven, Devs.goodbee],
+    dependencies: ["UserSettingsAPI"],
+
+    settings,
 
     start() {
         // DeveloperMode needs to be enabled for the context menu to be shown
-        TextAndImagesSettingsStores.DeveloperMode.updateSetting(true);
+        DeveloperMode.updateSetting(true);
     },
 
     contextMenus: {
@@ -53,7 +83,7 @@ export default definePlugin({
             if (!role) return;
 
             if (role.colorString) {
-                children.push(
+                children.unshift(
                     <Menu.MenuItem
                         id="vc-copy-role-color"
                         label="Copy Role Color"
@@ -64,7 +94,7 @@ export default definePlugin({
             }
 
             if (PermissionStore.getGuildPermissionProps(guild).canManageRoles) {
-                children.push(
+                children.unshift(
                     <Menu.MenuItem
                         id="vc-edit-role"
                         label="Edit Role"
@@ -74,6 +104,24 @@ export default definePlugin({
                         }}
                         icon={PencilIcon}
                     />
+                );
+            }
+
+            if (role.icon) {
+                children.push(
+                    <Menu.MenuItem
+                        id="vc-view-role-icon"
+                        label="View Role Icon"
+                        action={() => {
+                            openImageModal({
+                                url: `${location.protocol}//${window.GLOBAL_ENV.CDN_HOST}/role-icons/${role.id}/${role.icon}.${settings.store.roleIconFileFormat}`,
+                                height: 128,
+                                width: 128
+                            });
+                        }}
+                        icon={ImageIcon}
+                    />
+
                 );
             }
         }

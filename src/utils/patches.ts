@@ -16,22 +16,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { PatchReplacement, ReplaceFn } from "./types";
+import { runtimeHashMessageKey } from "./intlHash";
+import { Patch, PatchReplacement, ReplaceFn } from "./types";
 
-export function canonicalizeMatch(match: RegExp | string) {
-    if (typeof match === "string") return match;
-    const canonSource = match.source
-        .replaceAll("\\i", "[A-Za-z_$][\\w$]*");
-    return new RegExp(canonSource, match.flags);
+export function canonicalizeMatch<T extends RegExp | string>(match: T): T {
+    let partialCanon = typeof match === "string" ? match : match.source;
+    partialCanon = partialCanon.replaceAll(/#{intl::([\w$+/]*)(?:::(\w+))?}/g, (_, key, modifier) => {
+        const hashed = modifier === "raw" ? key : runtimeHashMessageKey(key);
+
+        const isString = typeof match === "string";
+        const hasSpecialChars = !Number.isNaN(Number(hashed[0])) || hashed.includes("+") || hashed.includes("/");
+
+        if (hasSpecialChars) {
+            return isString
+                ? `["${hashed}"]`
+                : String.raw`(?:\["${hashed}"\])`.replaceAll("+", "\\+");
+        }
+
+        return isString ? `.${hashed}` : String.raw`(?:\.${hashed})`;
+    });
+
+    if (typeof match === "string") {
+        return partialCanon as T;
+    }
+
+    const canonSource = partialCanon.replaceAll("\\i", String.raw`(?:[A-Za-z_$][\w$]*)`);
+    const canonRegex = new RegExp(canonSource, match.flags);
+    canonRegex.toString = match.toString.bind(match);
+
+    return canonRegex as T;
 }
 
-export function canonicalizeReplace(replace: string | ReplaceFn, pluginName: string): string | ReplaceFn {
-    const self = `Vencord.Plugins.plugins[${JSON.stringify(pluginName)}]`;
-
+export function canonicalizeReplace<T extends string | ReplaceFn>(replace: T, pluginPath: string): T {
     if (typeof replace !== "function")
-        return replace.replaceAll("$self", self);
+        return replace.replaceAll("$self", pluginPath) as T;
 
-    return (...args) => replace(...args).replaceAll("$self", self);
+    return ((...args) => replace(...args).replaceAll("$self", pluginPath)) as T;
 }
 
 export function canonicalizeDescriptor<T>(descriptor: TypedPropertyDescriptor<T>, canonicalize: (value: T) => T) {
@@ -46,12 +66,18 @@ export function canonicalizeDescriptor<T>(descriptor: TypedPropertyDescriptor<T>
     return descriptor;
 }
 
-export function canonicalizeReplacement(replacement: Pick<PatchReplacement, "match" | "replace">, plugin: string) {
+export function canonicalizeReplacement(replacement: Pick<PatchReplacement, "match" | "replace">, pluginPath: string) {
     const descriptors = Object.getOwnPropertyDescriptors(replacement);
     descriptors.match = canonicalizeDescriptor(descriptors.match, canonicalizeMatch);
     descriptors.replace = canonicalizeDescriptor(
         descriptors.replace,
-        replace => canonicalizeReplace(replace, plugin),
+        replace => canonicalizeReplace(replace, pluginPath),
     );
     Object.defineProperties(replacement, descriptors);
+}
+
+export function canonicalizeFind(patch: Patch) {
+    const descriptors = Object.getOwnPropertyDescriptors(patch);
+    descriptors.find = canonicalizeDescriptor(descriptors.find, canonicalizeMatch);
+    Object.defineProperties(patch, descriptors);
 }

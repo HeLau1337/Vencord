@@ -17,19 +17,32 @@
 */
 
 import { Devs } from "@utils/constants";
-import { LazyComponent } from "@utils/react";
 import definePlugin from "@utils/types";
+
+import StartupTimingPage from "./StartupTimingPage";
 
 export default definePlugin({
     name: "StartupTimings",
     description: "Adds Startup Timings to the Settings menu",
     authors: [Devs.Megu],
     patches: [{
-        find: "UserSettingsSections.PAYMENT_FLOW_MODAL_TEST_PAGE,",
-        replacement: {
-            match: /{section:\i\.UserSettingsSections\.PAYMENT_FLOW_MODAL_TEST_PAGE/,
-            replace: '{section:"StartupTimings",label:"Startup Timings",element:$self.StartupTimingPage},$&'
-        }
+        find: "#{intl::ACTIVITY_SETTINGS}",
+        replacement: [
+            {
+                // FIXME(Bundler spread transform related): Remove old compatiblity once enough time has passed, if they don't revert
+                match: /(?<=}\)([,;])(\i\.settings)\.forEach.+?(\i)\.push.+}\)}\))/,
+                replace: (_, commaOrSemi, settings, elements) => "" +
+                    `${commaOrSemi}${settings}?.[0]==="CHANGELOG"` +
+                    `&&${elements}.push({section:"StartupTimings",label:"Startup Timings",element:$self.StartupTimingPage})`,
+                noWarn: true
+            },
+            {
+                match: /(?<=}\)([,;])(\i\.settings)\.forEach.+?(\i)\.push.+\)\)\}\))(?=\)\})/,
+                replace: (_, commaOrSemi, settings, elements) => "" +
+                    `${commaOrSemi}${settings}?.[0]==="CHANGELOG"` +
+                    `&&${elements}.push({section:"StartupTimings",label:"Startup Timings",element:$self.StartupTimingPage})`,
+            },
+        ]
     }],
-    StartupTimingPage: LazyComponent(() => require("./StartupTimingPage").default)
+    StartupTimingPage
 });

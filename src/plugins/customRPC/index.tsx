@@ -17,20 +17,25 @@
 */
 
 import { definePluginSettings, Settings } from "@api/Settings";
+import { getUserSettingLazy } from "@api/UserSettings";
+import { ErrorCard } from "@components/ErrorCard";
+import { Flex } from "@components/Flex";
 import { Link } from "@components/Link";
 import { Devs } from "@utils/constants";
 import { isTruthy } from "@utils/guards";
+import { Margins } from "@utils/margins";
+import { classes } from "@utils/misc";
 import { useAwaiter } from "@utils/react";
 import definePlugin, { OptionType } from "@utils/types";
-import { findByPropsLazy, findComponentByCodeLazy } from "@webpack";
-import { ApplicationAssetUtils, FluxDispatcher, Forms, GuildStore, React, SelectedChannelStore, SelectedGuildStore, UserStore } from "@webpack/common";
+import { findByCodeLazy, findComponentByCodeLazy } from "@webpack";
+import { ApplicationAssetUtils, Button, FluxDispatcher, Forms, React, UserStore } from "@webpack/common";
 
-const ActivityComponent = findComponentByCodeLazy("onOpenGameProfile");
-const ActivityClassName = findByPropsLazy("activity", "buttonColor");
-const Colors = findByPropsLazy("profileColors");
+const useProfileThemeStyle = findByCodeLazy("profileThemeStyle:", "--profile-gradient-primary-color");
+const ActivityView = findComponentByCodeLazy(".party?(0", ".card");
+
+const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
 
 async function getApplicationAsset(key: string): Promise<string> {
-    if (/https?:\/\/(cdn|media)\.discordapp\.(com|net)\/attachments\//.test(key)) return "mp:" + key.replace(/https?:\/\/(cdn|media)\.discordapp\.(com|net)\//, "");
     return (await ApplicationAssetUtils.fetchAssetIds(settings.store.appID!, [key]))[0];
 }
 
@@ -164,7 +169,7 @@ const settings = definePluginSettings({
                 value: TimestampMode.NOW
             },
             {
-                label: "Same as your current time",
+                label: "Same as your current time (not reset after 24h)",
                 value: TimestampMode.TIME
             },
             {
@@ -175,7 +180,7 @@ const settings = definePluginSettings({
     },
     startTime: {
         type: OptionType.NUMBER,
-        description: "Start timestamp in milisecond (only for custom timestamp mode)",
+        description: "Start timestamp in milliseconds (only for custom timestamp mode)",
         onChange: onChange,
         disabled: isTimestampDisabled,
         isValid: (value: number) => {
@@ -185,7 +190,7 @@ const settings = definePluginSettings({
     },
     endTime: {
         type: OptionType.NUMBER,
-        description: "End timestamp in milisecond (only for custom timestamp mode)",
+        description: "End timestamp in milliseconds (only for custom timestamp mode)",
         onChange: onChange,
         disabled: isTimestampDisabled,
         isValid: (value: number) => {
@@ -264,6 +269,7 @@ function isStreamLinkDisabled() {
 
 function isStreamLinkValid(value: string) {
     if (!isStreamLinkDisabled() && !/https?:\/\/(www\.)?(twitch\.tv|youtube\.com)\/\w+/.test(value)) return "Streaming link must be a valid URL.";
+    if (value && value.length > 512) return "Streaming link must be not longer than 512 characters.";
     return true;
 }
 
@@ -272,8 +278,9 @@ function isTimestampDisabled() {
 }
 
 function isImageKeyValid(value: string) {
-    if (/https?:\/\/(?!i\.)?imgur\.com\//.test(value)) return "Imgur link must be a direct link to the image. (e.g. https://i.imgur.com/...)";
-    if (/https?:\/\/(?!media\.)?tenor\.com\//.test(value)) return "Tenor link must be a direct link to the image. (e.g. https://media.tenor.com/...)";
+    if (/https?:\/\/(cdn|media)\.discordapp\.(com|net)\//.test(value)) return "Don't use a Discord link. Use an Imgur image link instead.";
+    if (/https?:\/\/(?!i\.)?imgur\.com\//.test(value)) return "Imgur link must be a direct link to the image (e.g. https://i.imgur.com/...). Right click the image and click 'Copy image address'";
+    if (/https?:\/\/(?!media\.)?tenor\.com\//.test(value)) return "Tenor link must be a direct link to the image (e.g. https://media.tenor.com/...). Right click the GIF and click 'Copy image address'";
     return true;
 }
 
@@ -385,32 +392,76 @@ async function setRpc(disable?: boolean) {
 
 export default definePlugin({
     name: "CustomRPC",
-    description: "Allows you to set a custom rich presence.",
-    authors: [Devs.captain, Devs.AutumnVN],
+    description: "Add a fully customisable Rich Presence (Game status) to your Discord profile",
+    authors: [Devs.captain, Devs.AutumnVN, Devs.nin0dev],
+    dependencies: ["UserSettingsAPI"],
     start: setRpc,
     stop: () => setRpc(true),
     settings,
 
+    patches: [
+        {
+            find: ".party?(0",
+            all: true,
+            replacement: {
+                match: /\i\.id===\i\.id\?null:/,
+                replace: ""
+            }
+        }
+    ],
+
     settingsAboutComponent: () => {
         const activity = useAwaiter(createActivity);
+        const gameActivityEnabled = ShowCurrentGame.useSetting();
+        const { profileThemeStyle } = useProfileThemeStyle({});
+
         return (
             <>
-                <Forms.FormText>
-                    Go to <Link href="https://discord.com/developers/applications">Discord Developer Portal</Link> to create an application and
-                    get the application ID.
-                </Forms.FormText>
-                <Forms.FormText>
-                    Upload images in the Rich Presence tab to get the image keys.
-                </Forms.FormText>
-                <Forms.FormText>
-                    If you want to use image link, download your image and reupload the image to <Link href="https://imgur.com">Imgur</Link> and get the image link by right-clicking the image and select "Copy image address".
-                </Forms.FormText>
-                <Forms.FormDivider />
-                <div style={{ width: "284px" }} className={Colors.profileColors}>
-                    {activity[0] && <ActivityComponent activity={activity[0]} className={ActivityClassName.activity} channelId={SelectedChannelStore.getChannelId()}
-                        guild={GuildStore.getGuild(SelectedGuildStore.getLastSelectedGuildId())}
-                        application={{ id: settings.store.appID }}
-                        user={UserStore.getCurrentUser()} />}
+                {!gameActivityEnabled && (
+                    <ErrorCard
+                        className={classes(Margins.top16, Margins.bottom16)}
+                        style={{ padding: "1em" }}
+                    >
+                        <Forms.FormTitle>Notice</Forms.FormTitle>
+                        <Forms.FormText>Activity Sharing isn't enabled, people won't be able to see your custom rich presence!</Forms.FormText>
+
+                        <Button
+                            color={Button.Colors.TRANSPARENT}
+                            className={Margins.top8}
+                            onClick={() => ShowCurrentGame.updateSetting(true)}
+                        >
+                            Enable
+                        </Button>
+                    </ErrorCard>
+                )}
+
+                <Flex flexDirection="column" style={{ gap: ".5em" }} className={Margins.top16}>
+                    <Forms.FormText>
+                        Go to the <Link href="https://discord.com/developers/applications">Discord Developer Portal</Link> to create an application and
+                        get the application ID.
+                    </Forms.FormText>
+                    <Forms.FormText>
+                        Upload images in the Rich Presence tab to get the image keys.
+                    </Forms.FormText>
+                    <Forms.FormText>
+                        If you want to use an image link, download your image and reupload the image to <Link href="https://imgur.com">Imgur</Link> and get the image link by right-clicking the image and selecting "Copy image address".
+                    </Forms.FormText>
+                    <Forms.FormText>
+                        You can't see your own buttons on your profile, but everyone else can see it fine.
+                    </Forms.FormText>
+                    <Forms.FormText>
+                        Some weird unicode text ("fonts" 𝖑𝖎𝖐𝖊 𝖙𝖍𝖎𝖘) may cause the rich presence to not show up, try using normal letters instead.
+                    </Forms.FormText>
+                </Flex>
+
+                <Forms.FormDivider className={Margins.top8} />
+
+                <div style={{ width: "284px", ...profileThemeStyle, marginTop: 8, borderRadius: 8, background: "var(--bg-mod-faint)" }}>
+                    {activity[0] && <ActivityView
+                        activity={activity[0]}
+                        user={UserStore.getCurrentUser()}
+                        currentUser={UserStore.getCurrentUser()}
+                    />}
                 </div>
             </>
         );

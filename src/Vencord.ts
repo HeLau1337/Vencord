@@ -17,16 +17,19 @@
 */
 
 export * as Api from "./api";
+export * as Components from "./components";
 export * as Plugins from "./plugins";
 export * as Util from "./utils";
 export * as QuickCss from "./utils/quickCss";
 export * as Updater from "./utils/updater";
 export * as Webpack from "./webpack";
+export * as WebpackPatcher from "./webpack/patchWebpack";
 export { PlainSettings, Settings };
 
 import "./utils/quickCss";
 import "./webpack/patchWebpack";
 
+import { openUpdaterModal } from "@components/VencordSettings/UpdaterTab";
 import { StartAt } from "@utils/types";
 
 import { get as dsGet } from "./api/DataStore";
@@ -39,6 +42,10 @@ import { getCloudSettings, putCloudSettings } from "./utils/settingsSync";
 import { checkForUpdates, update, UpdateLogger } from "./utils/updater";
 import { onceReady } from "./webpack";
 import { SettingsRouter } from "./webpack/common";
+
+if (IS_REPORTER) {
+    require("./debug/runReporter");
+}
 
 async function syncSettings() {
     // pre-check for local shared settings
@@ -85,7 +92,7 @@ async function init() {
 
     syncSettings();
 
-    if (!IS_WEB) {
+    if (!IS_WEB && !IS_UPDATER_DISABLED) {
         try {
             const isOutdated = await checkForUpdates();
             if (!isOutdated) return;
@@ -103,16 +110,13 @@ async function init() {
                 return;
             }
 
-            if (Settings.notifyAboutUpdates)
-                setTimeout(() => showNotification({
-                    title: "A Vencord update is available!",
-                    body: "Click here to view the update",
-                    permanent: true,
-                    noPersist: true,
-                    onClick() {
-                        SettingsRouter.open("VencordUpdater");
-                    }
-                }), 10_000);
+            setTimeout(() => showNotification({
+                title: "A Vencord update is available!",
+                body: "Click here to view the update",
+                permanent: true,
+                noPersist: true,
+                onClick: openUpdaterModal!
+            }), 10_000);
         } catch (err) {
             UpdateLogger.error("Failed to check for updates", err);
         }

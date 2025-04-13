@@ -77,7 +77,8 @@ const enum NameFormat {
     ArtistFirst = "artist-first",
     SongFirst = "song-first",
     ArtistOnly = "artist",
-    SongOnly = "song"
+    SongOnly = "song",
+    AlbumName = "album"
 }
 
 const applicationId = "1108588077900898414";
@@ -85,7 +86,7 @@ const placeholderId = "2a96cbd8b46e442fc41c2b86b821562f";
 
 const logger = new Logger("LastFMRichPresence");
 
-const presenceStore = findByPropsLazy("getLocalPresence");
+const PresenceStore = findByPropsLazy("getLocalPresence");
 
 async function getApplicationAsset(key: string): Promise<string> {
     return (await ApplicationAssetUtils.fetchAssetIds(applicationId, [key]))[0];
@@ -113,10 +114,20 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         default: false,
     },
+    shareSong: {
+        description: "show link to song on last.fm",
+        type: OptionType.BOOLEAN,
+        default: true,
+    },
     hideWithSpotify: {
         description: "hide last.fm presence if spotify is running",
         type: OptionType.BOOLEAN,
         default: true,
+    },
+    hideWithActivity: {
+        description: "Hide Last.fm presence if you have any other presence",
+        type: OptionType.BOOLEAN,
+        default: false,
     },
     statusName: {
         description: "custom status text",
@@ -147,6 +158,10 @@ const settings = definePluginSettings({
             {
                 label: "Use song name only",
                 value: NameFormat.SongOnly
+            },
+            {
+                label: "Use album name (falls back to custom status text if song has no album)",
+                value: NameFormat.AlbumName
             }
         ],
     },
@@ -264,12 +279,16 @@ export default definePlugin({
     },
 
     async getActivity(): Promise<Activity | null> {
+        if (settings.store.hideWithActivity) {
+            if (PresenceStore.getActivities().some(a => a.application_id !== applicationId)) {
+                return null;
+            }
+        }
+
         if (settings.store.hideWithSpotify) {
-            for (const activity of presenceStore.getActivities()) {
-                if (activity.type === ActivityType.LISTENING && activity.application_id !== applicationId) {
-                    // there is already music status because of Spotify or richerCider (probably more)
-                    return null;
-                }
+            if (PresenceStore.getActivities().some(a => a.type === ActivityType.LISTENING && a.application_id !== applicationId)) {
+                // there is already music status because of Spotify or richerCider (probably more)
+                return null;
             }
         }
 
@@ -290,17 +309,18 @@ export default definePlugin({
                 large_text: trackData.album || undefined,
             };
 
-        const buttons: ActivityButton[] = [
-            {
-                label: "View Song",
-                url: trackData.url,
-            },
-        ];
+        const buttons: ActivityButton[] = [];
 
         if (settings.store.shareUsername)
             buttons.push({
                 label: "Last.fm Profile",
                 url: `https://www.last.fm/user/${settings.store.username}`,
+            });
+
+        if (settings.store.shareSong)
+            buttons.push({
+                label: "View Song",
+                url: trackData.url,
             });
 
         const statusName = (() => {
@@ -313,6 +333,8 @@ export default definePlugin({
                     return trackData.artist;
                 case NameFormat.SongOnly:
                     return trackData.name;
+                case NameFormat.AlbumName:
+                    return trackData.album || settings.store.statusName;
                 default:
                     return settings.store.statusName;
             }
@@ -326,7 +348,7 @@ export default definePlugin({
             state: trackData.artist,
             assets,
 
-            buttons: buttons.map(v => v.label),
+            buttons: buttons.length ? buttons.map(v => v.label) : undefined,
             metadata: {
                 button_urls: buttons.map(v => v.url),
             },
