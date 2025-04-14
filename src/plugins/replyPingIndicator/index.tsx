@@ -35,11 +35,11 @@ export default definePlugin({
 
     renderPingIndicator: (props?: { message?: Message; }) => {
         if (!props || !props.message) return <></>;
-        const { mentions } = props.message;
-        if (mentions.length > 0) {
+        const { messageReference, mentions } = props.message;
+        if (mentions.length > 0 && messageReference?.message_id) {
             return <span
                 style={{
-                    marginLeft: ".25rem",
+                    marginLeft: ".3rem",
                     fontSize: "0.75rem",
                     lineHeight: "1.375rem",
                     color: "rgb(179,135,76)",
