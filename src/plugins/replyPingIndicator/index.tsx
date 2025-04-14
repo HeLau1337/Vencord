@@ -24,7 +24,7 @@ export default definePlugin({
 
     patches: [
         {
-            find: '"Message Username"',
+            find: "\"Message Username\"",
             replacement: {
                 // thanks https://github.com/Syncxv/vc-timezones/pull/4
                 match: /(?<=isVisibleOnlyOnHover.+?)id:.{1,11},timestamp.{1,50}}\),/,
@@ -35,21 +35,19 @@ export default definePlugin({
 
     renderPingIndicator: (props?: { message?: Message; }) => {
         if (!props || !props.message) return <></>;
-        const { messageReference, mentions } = props.message;
-        if (!messageReference) return <></>;
-        const referencedMsg = MessageStore.getMessage(messageReference.channel_id, messageReference.message_id);
-        if (mentions.includes(referencedMsg?.author?.id)) {
+        const { mentions } = props.message;
+        if (mentions.length > 0) {
             return <span
-                    style={{
-                        marginLeft: ".25rem",
-                        fontSize: "0.75rem",
-                        lineHeight: "1.375rem",
-                        color: "rgb(179,135,76)",
-                    }}
-                    title={"This reply pinged the author of the replied message."}
-                >
-                &#64;
-            </span>;
+                style={{
+                    marginLeft: ".25rem",
+                    fontSize: "0.75rem",
+                    lineHeight: "1.375rem",
+                    color: "rgb(179,135,76)",
+                }}
+                title={"This reply pinged someone."}
+            >
+                {(mentions.length > 1) ? mentions.length : ""}&#64;
+            </span>; // &#64; = @
         }
         return <></>;
     },
