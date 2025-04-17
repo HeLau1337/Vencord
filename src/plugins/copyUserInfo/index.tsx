@@ -21,7 +21,8 @@ import { definePluginSettings } from "@api/Settings";
 import { CopyIcon, LinkIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { Clipboard, Menu } from "@webpack/common";
+import { copyToClipboard } from "@utils/clipboard";
+import { Menu } from "@webpack/common";
 import type { Channel, User } from "discord-types/general";
 
 interface UserContextProps {
@@ -38,7 +39,7 @@ const UserContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: U
             <Menu.MenuItem
                 id="vc-copy-user-url"
                 label="Copy User URL"
-                action={() => Clipboard.copy(`<https://discord.com/users/${user.id}>`)}
+                action={() => copyToClipboard(`<https://discord.com/users/${user.id}>`)}
                 icon={LinkIcon}
             />
         );
@@ -48,7 +49,7 @@ const UserContextMenuPatch: NavContextMenuPatchCallback = (children, { user }: U
             <Menu.MenuItem
                 id="vc-copy-username"
                 label="Copy Username"
-                action={() => Clipboard.copy(user.username)}
+                action={() => copyToClipboard(user.username)}
                 icon={CopyIcon}
             />
         );
