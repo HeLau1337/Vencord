@@ -35,6 +35,7 @@ import { useAwaiter } from "@utils/react";
 import { Plugin } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 import { Alerts, Button, Card, Forms, lodash, Parser, React, Select, Text, TextInput, Toasts, Tooltip, useMemo } from "@webpack/common";
+import { JSX } from "react";
 
 import Plugins, { ExcludedPlugins } from "~plugins";
 
@@ -44,7 +45,7 @@ const { startDependenciesRecursive, startPlugin, stopPlugin } = proxyLazy(() => 
 const cl = classNameFactory("vc-plugins-");
 const logger = new Logger("PluginSettings", "#a6d189");
 
-const InputStyles = findByPropsLazy("inputWrapper", "inputDefault", "error");
+const InputStyles = findByPropsLazy("inputWrapper", "inputError", "error");
 const ButtonClasses = findByPropsLazy("button", "disabled", "enabled");
 
 
@@ -61,14 +62,14 @@ function showErrorToast(message: string) {
 
 function ReloadRequiredCard({ required }: { required: boolean; }) {
     return (
-        <Card className={cl("info-card", { "restart-card": required })}>
+        <Card className={classes(cl("info-card"), required && "vc-warning-card")}>
             {required ? (
                 <>
                     <Forms.FormTitle tag="h5">Restart required!</Forms.FormTitle>
                     <Forms.FormText className={cl("dep-text")}>
                         Restart now to apply new plugins and their settings
                     </Forms.FormText>
-                    <Button onClick={() => location.reload()}>
+                    <Button onClick={() => location.reload()} className={cl("restart-button")}>
                         Restart
                     </Button>
                 </>
@@ -157,8 +158,8 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
                     className={classes(ButtonClasses.button, cl("info-button"))}
                 >
                     {plugin.options && !isObjectEmpty(plugin.options)
-                        ? <CogWheel />
-                        : <InfoIcon />}
+                        ? <CogWheel className={cl("info-icon")} />
+                        : <InfoIcon className={cl("info-icon")} />}
                 </button>
             }
         />
@@ -176,10 +177,10 @@ function ExcludedPluginsList({ search }: { search: string; }) {
     const matchingExcludedPlugins = Object.entries(ExcludedPlugins)
         .filter(([name]) => name.toLowerCase().includes(search));
 
-    const ExcludedReasons: Record<"web" | "discordDesktop" | "vencordDesktop" | "desktop" | "dev", string> = {
+    const ExcludedReasons: Record<"web" | "discordDesktop" | "vesktop" | "desktop" | "dev", string> = {
         desktop: "Discord Desktop app or Vesktop",
         discordDesktop: "Discord Desktop app",
-        vencordDesktop: "Vesktop app",
+        vesktop: "Vesktop app",
         web: "Vesktop app and the Web version of Discord",
         dev: "Developer version of Vencord"
     };
@@ -348,7 +349,7 @@ export default function PluginSettings() {
                         select={onStatusChange}
                         isSelected={v => v === searchValue.status}
                         closeOnSelect={true}
-                        className={InputStyles.inputDefault}
+                        className={InputStyles.input}
                     />
                 </div>
             </div>
@@ -387,7 +388,7 @@ function makeDependencyList(deps: string[]) {
     return (
         <React.Fragment>
             <Forms.FormText>This plugin is required by:</Forms.FormText>
-            {deps.map((dep: string) => <Forms.FormText className={cl("dep-text")}>{dep}</Forms.FormText>)}
+            {deps.map((dep: string) => <Forms.FormText key={dep} className={cl("dep-text")}>{dep}</Forms.FormText>)}
         </React.Fragment>
     );
 }
