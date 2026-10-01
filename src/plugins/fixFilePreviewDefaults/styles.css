@@ -1,0 +1,16 @@
+.vc-file-preview-download-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--interactive-normal);
+    line-height: 0;
+}
+
+.vc-file-preview-download-btn:hover {
+    color: var(--interactive-hover);
+}
+
+.vc-file-preview-download-btn:active {
+    color: var(--interactive-active);
+}
