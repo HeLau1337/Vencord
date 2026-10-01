@@ -10,7 +10,10 @@ import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { i18n, Tooltip } from "@webpack/common";
+import { findCssClassesLazy } from "@webpack";
+import { Clickable, i18n, Tooltip } from "@webpack/common";
+
+const previewClasses = findCssClassesLazy("overflowIcon", "openFullPreviewSection");
 
 const settings = definePluginSettings({
     defaultWordWrap: {
@@ -70,21 +73,14 @@ const DownloadButton = ErrorBoundary.wrap(function ({
     return (
         <Tooltip text={downloadLabel}>
             {tooltipProps => (
-                <div
+                <Clickable
                     {...tooltipProps}
-                    className="vc-file-preview-download-btn"
+                    className={`${previewClasses.overflowIcon ?? ""} vc-file-preview-download-btn`}
                     aria-label={downloadLabel}
                     onClick={onDownload}
-                    onKeyDown={e => {
-                        if (e.key === "Enter" || e.key === " ") {
-                            onDownload();
-                        }
-                    }}
-                    role="button"
-                    tabIndex={0}
                 >
                     <DownloadIcon />
-                </div>
+                </Clickable>
             )}
         </Tooltip>
     );
