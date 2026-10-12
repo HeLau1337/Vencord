@@ -8,7 +8,6 @@ import "@plugins/fixFilePreviewDefaults/styles.css";
 
 import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { findCssClassesLazy } from "@webpack";
 import { Clickable, i18n, Tooltip } from "@webpack/common";
@@ -89,7 +88,7 @@ const DownloadButton = ErrorBoundary.wrap(function ({
 export default definePlugin({
     name: "FixFilePreviewDefaults",
     description: "Restores the file preview download button to the preview footer and allows changing the default 'Wrap Text' behavior.",
-    authors: [Devs.Hendrik],
+    authors: [],
     tags: ["Utility", "Media"],
     searchTerms: ["filePreview", "wordWrap", "download", "preview"],
     settings,
