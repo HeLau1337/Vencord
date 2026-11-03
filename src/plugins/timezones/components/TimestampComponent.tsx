@@ -5,11 +5,10 @@
  */
 
 import ErrorBoundary from "@components/ErrorBoundary";
+import { classes, timezonesStoreService } from "@plugins/timezones";
+import { LocalUserTimestamp } from "@plugins/timezones/types";
+import { getTime } from "@plugins/timezones/utils";
 import { Tooltip, useEffect, useState } from "@webpack/common";
-
-import { classes, timezonesStoreService } from "../index";
-import { LocalUserTimestamp } from "../types";
-import { getTime } from "../utils";
 
 export const TimestampComponent = ErrorBoundary.wrap(({ userId, timestamp, type }: LocalUserTimestamp) => {
     const [currentTime, setCurrentTime] = useState(timestamp || Date.now());

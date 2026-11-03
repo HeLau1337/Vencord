@@ -5,12 +5,13 @@
  */
 
 import { NotificationData, showNotification } from "@api/Notifications";
+import { Button } from "@components/Button";
 import { Flex } from "@components/Flex";
+import { Heading } from "@components/Heading";
+import { timezonesStoreService } from "@plugins/timezones";
+import { getCurrentDateForFileName } from "@plugins/timezones/utils";
 import { useForceUpdater } from "@utils/react";
-import { Button, React, Text, Tooltip, useState } from "@webpack/common";
-
-import { timezonesStoreService } from "../index";
-import { getCurrentDateForFileName } from "../utils";
+import { React, Tooltip, useState } from "@webpack/common";
 
 export function DataPortComponent() {
     const update = useForceUpdater();
@@ -80,10 +81,10 @@ export function DataPortComponent() {
 
     return (
         <>
-            <Text variant="heading-md/semibold">Import and export your user timezone data</Text>
+            <Heading tag="h4">Import and export your user timezone data</Heading>
             <Flex flexDirection={"row"}>
                 <Button
-                    size={Button.Sizes.SMALL}
+                    size="small"
                     onClick={() => exportData()}
                 >Export data</Button>
 
@@ -93,8 +94,8 @@ export function DataPortComponent() {
                         <Button
                             onMouseLeave={onMouseLeave}
                             onMouseEnter={onMouseEnter}
-                            size={Button.Sizes.SMALL}
-                            color={Button.Colors.RED}
+                            size="small"
+                            variant="dangerPrimary"
                             onClick={() => importData()}
                         >Import data</Button>
                     )}

@@ -19,11 +19,11 @@
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { CopyIcon, LinkIcon } from "@components/Icons";
+import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { copyToClipboard } from "@utils/clipboard";
+import type { Channel, User } from "@vencord/discord-types";
 import { Menu } from "@webpack/common";
-import type { Channel, User } from "discord-types/general";
 
 interface UserContextProps {
     channel: Channel;

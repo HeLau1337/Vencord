@@ -5,9 +5,8 @@
  */
 
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
-import { openModal } from "@utils/modal";
-import { Menu } from "@webpack/common";
-import { User } from "discord-types/general";
+import { User } from "@vencord/discord-types";
+import { Menu, openModal } from "@webpack/common";
 
 import { SetTimezoneModal } from "./TimezoneModal";
 

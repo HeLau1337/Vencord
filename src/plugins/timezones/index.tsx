@@ -12,8 +12,8 @@ import "./styles.css";
 
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
+import { Message, User } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
-import { Message, User } from "discord-types/general";
 
 import { TimestampComponent } from "./components/TimestampComponent";
 import { userContextMenuPatch } from "./components/UserContextMenuPatch";

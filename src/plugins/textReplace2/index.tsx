@@ -18,13 +18,15 @@
 
 import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
+import { Button } from "@components/Button";
 import { Flex } from "@components/Flex";
+import { Heading } from "@components/Heading";
 import { DeleteIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { useForceUpdater } from "@utils/react";
 import definePlugin, { OptionType } from "@utils/types";
-import { Button, Forms, React, TextInput, useState } from "@webpack/common";
+import { React, TextInput, useState } from "@webpack/common";
 
 const STRING_RULES_KEY = "TextReplace_rulesString";
 const REGEX_RULES_KEY = "TextReplace_rulesRegex";
@@ -152,7 +154,7 @@ function TextReplace({ title, rulesArray, rulesKey, update }: TextReplaceProps) 
 
     return (
         <>
-            <Forms.FormTitle tag="h4">{title}</Forms.FormTitle>
+            <Heading tag="h4">{title}</Heading>
             <Flex flexDirection="column" style={{ gap: "0.5em" }}>
                 {
                     rulesArray.map((rule, index) =>
@@ -176,7 +178,8 @@ function TextReplace({ title, rulesArray, rulesKey, update }: TextReplaceProps) 
                                     />
                                 </Flex>
                                 <Button
-                                    size={Button.Sizes.MIN}
+                                    size="min"
+                                    variant="none"
                                     onClick={() => onClickRemove(index)}
                                     style={{
                                         background: "none",
@@ -206,7 +209,7 @@ function TextReplaceTesting() {
     const [value, setValue] = useState("");
     return (
         <>
-            <Forms.FormTitle tag="h4">Test Rules</Forms.FormTitle>
+            <Heading tag="h4">Test Rules</Heading>
             <TextInput placeholder="Type a message" onChange={setValue} />
             <TextInput placeholder="Message with rules applied" editable={false} value={applyRules(value)} />
         </>
