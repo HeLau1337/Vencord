@@ -21,6 +21,12 @@ const settings = definePluginSettings({
         description: "Wrap text by default (Discord defaults to enabled)",
         restartNeeded: false
     },
+    defaultExpanded: {
+        type: OptionType.BOOLEAN,
+        default: false,
+        description: "Expand file previews by default (Discord defaults to enabled for single file attachments)",
+        restartNeeded: false
+    },
     showDownloadButton: {
         type: OptionType.BOOLEAN,
         default: true,
@@ -87,14 +93,18 @@ const DownloadButton = ErrorBoundary.wrap(function ({
 
 export default definePlugin({
     name: "FixFilePreviewDefaults",
-    description: "Restores the file preview download button to the preview footer and allows changing the default 'Wrap Text' behavior.",
+    description: "Restores the file preview download button to the preview footer and allows changing the default 'Wrap Text' and 'Expanded' behaviors.",
     authors: [],
     tags: ["Utility", "Media"],
-    searchTerms: ["filePreview", "wordWrap", "download", "preview"],
+    searchTerms: ["filePreview", "wordWrap", "expanded", "collapse", "download", "preview"],
     settings,
 
     get defaultWordWrap(): boolean {
         return settings.store.defaultWordWrap;
+    },
+
+    get defaultExpanded(): boolean {
+        return settings.store.defaultExpanded;
     },
 
     renderDownloadButton(props: { url: string; fileName: string; }, downloadRef?: { current: HTMLAnchorElement | null; }) {
@@ -107,8 +117,16 @@ export default definePlugin({
         {
             find: "plaintext-preview-overflow-menu",
             replacement: {
-                match: /(?<=\.split\("\."\)\.slice\(-1\)\[0\]\),\[\i,\i\]=\i\.useState\()(!0|true)/,
-                replace: "$self.defaultWordWrap"
+                match: /(\.split\("\."\)\.slice\(-1\)\[0\]\)[\s\S]{0,300}?\[(\i),\i\]=(?:\(0,)?\i\.useState\)?\()(!0|true)(?=[\s\S]{0,4000}?wordWrap:\2\b)/,
+                replace: "$1$self.defaultWordWrap"
+            }
+        },
+        // Change the default expanded state in file previews (Discord defaults to expanded for single attachments)
+        {
+            find: "plaintext-preview-overflow-menu",
+            replacement: {
+                match: /(defaultExpanded:(\i)(?:=![01]|=(?:true|false))?[\s\S]{0,300}?\[(\i),\i\]=(?:\(0,)?\i\.useState\)?\()\2(?=\)[\s\S]{0,4000}?expanded:\3\b)/,
+                replace: "$1$self.defaultExpanded"
             }
         },
         // Insert the Download button into the preview footer beside the overflow menu button
