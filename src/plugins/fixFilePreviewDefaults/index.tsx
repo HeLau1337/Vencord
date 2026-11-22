@@ -50,27 +50,29 @@ const DownloadIcon = () => (
 const DownloadButton = ErrorBoundary.wrap(function ({
     url,
     fileName,
-    downloadRef
+    onDownload: triggerDownload
 }: {
     url: string;
     fileName: string;
-    downloadRef?: { current: HTMLAnchorElement | null; };
+    onDownload?: () => void;
 }) {
     const onDownload = (e?: React.MouseEvent) => {
         e?.preventDefault();
         e?.stopPropagation();
-        if (downloadRef?.current) {
-            downloadRef.current.click();
-        } else {
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            a.target = "_blank";
-            a.rel = "noreferrer noopener";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+        if (triggerDownload) {
+            try {
+                triggerDownload();
+                return;
+            } catch { }
         }
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.target = "_blank";
+        a.rel = "noreferrer noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
     };
 
     const downloadLabel = (i18n.intl?.string?.(i18n.t?.DOWNLOAD) || "Download") as string;
@@ -107,9 +109,9 @@ export default definePlugin({
         return settings.store.defaultExpanded;
     },
 
-    renderDownloadButton(props: { url: string; fileName: string; }, downloadRef?: { current: HTMLAnchorElement | null; }) {
+    renderDownloadButton(props: { url: string; fileName: string; }, onDownload?: () => void) {
         if (!settings.store.showDownloadButton) return null;
-        return <DownloadButton url={props.url} fileName={props.fileName} downloadRef={downloadRef} />;
+        return <DownloadButton url={props.url} fileName={props.fileName} onDownload={onDownload} />;
     },
 
     patches: [
@@ -133,8 +135,8 @@ export default definePlugin({
         {
             find: "plaintext-preview-overflow-menu",
             replacement: {
-                match: /function \i\((\i)\)\{let\{[^}]+?\}=\1,\i=(?:\(0,)?\i\.useRef\)?\(null\),(\i)=(?:\(0,)?\i\.useRef\)?\(null\);return\(0,\i\.jsx(?:s)?\)\(\i\.Fragment,\{children:\[/,
-                replace: "$&$self.renderDownloadButton($1,$2),"
+                match: /(function \i\((\i)\)\{let\{[^}]{0,200}?setWordWrap:\i[^}]{0,200}?\}=\2,.{0,1500}?return(?:\(0,)?\i\.jsxs?\)?\(\i\.Fragment,\{children:\[)(?=.{0,300}?navId:"plaintext-preview-overflow-menu".{0,400}?id:"download".{0,150}?action:\(\)=>\{(.{1,120}?)[,;]\i\(\)\}\})/,
+                replace: "$1$self.renderDownloadButton($2,()=>{$3}),"
             }
         }
     ]
